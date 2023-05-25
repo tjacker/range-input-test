@@ -1,0 +1,186 @@
+@use "sass:math";
+
+$barHeight: 3px;
+$barBorderRadius: 3px;
+$barBackground: #c2c2cd;
+$barPadding: 10px;
+$handleBackground: #005f9e;
+$handleActiveBackground: darken($handleBackground, 5%);
+$handleSize: 20px;
+$handleSizeFirefox: 16px; // border increases handle size to equal value above
+
+@mixin c-range-input__slider-thumb {
+  background-color: $handleBackground;
+  border-radius: 50%;
+  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.15);
+  border: 2px solid rgba(0, 0, 0, 0.25);
+}
+
+@mixin c-range-input__wrapper--placement {
+  position: relative;
+  width: calc(100% - $barPadding * 2);
+  margin: 0 $barPadding;
+}
+
+.c-range-input__field {
+  // Remove default appearance
+  -webkit-appearance: none;
+  appearance: none;
+
+  position: relative;
+  width: 100%;
+  height: $barHeight;
+  background: $barBackground;
+  border-radius: $barBorderRadius;
+  outline: none;
+  cursor: pointer;
+  z-index: 2;
+
+  &-wrapper {
+    height: 20px;
+  }
+
+  // Track adjustments for increasing clicking area.
+  // &::-webkit-slider-runnable-track {}
+
+  &::-moz-range-track {
+    padding: 8.5px 0;
+  }
+
+  // Note: grouping vendor prefix rules breaks styling
+  &::-webkit-slider-thumb {
+    // Remove default appearance
+    -webkit-appearance: none;
+    appearance: none;
+
+    @include c-range-input__slider-thumb();
+    width: $handleSize;
+    height: $handleSize;
+  }
+  &:active::-webkit-slider-thumb {
+    background-color: $handleActiveBackground;
+  }
+  &:focus::-webkit-slider-thumb {
+    background-color: $handleActiveBackground;
+  }
+  &:focus-visible::-webkit-slider-thumb {
+    background-color: $handleActiveBackground;
+    box-shadow: none;
+    outline: 2px solid $handleBackground;
+    outline-offset: 1px;
+  }
+
+  &::-moz-range-thumb {
+    @include c-range-input__slider-thumb();
+    width: $handleSizeFirefox;
+    height: $handleSizeFirefox;
+  }
+  &:active::-moz-range-thumb {
+    background-color: $handleActiveBackground;
+  }
+  &:focus::-moz-range-thumb {
+    background-color: $handleActiveBackground;
+  }
+  &:focus-visible::-moz-range-thumb {
+    background-color: $handleActiveBackground;
+    box-shadow: none;
+    outline: 2px solid $handleBackground;
+    outline-offset: 1px;
+  }
+}
+
+.c-range-input {
+  &__wrapper {
+    position: relative;
+    line-height: 1;
+  }
+
+  &:not(.has-display-value) {
+    padding-top: 10px;
+  }
+
+  &:not(.has-ticks) {
+    padding-bottom: 10px;
+  }
+
+  &__display-wrapper {
+    @include c-range-input__wrapper--placement();
+    height: 24px;
+  }
+
+  &__display-value {
+    position: absolute;
+    display: inline-block;
+    min-width: 24px;
+    text-align: center;
+    line-height: 16px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    background: $handleBackground;
+    padding: 2px 4px;
+    border-radius: 3px;
+    cursor: default;
+    transform: translateX(-50%);
+    z-index: 1;
+
+    &:after {
+      content: "";
+      position: absolute;
+      right: 0;
+      bottom: -4px;
+      left: 0;
+      display: block;
+      width: 0;
+      height: 0;
+      margin: auto;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 4px solid $handleBackground;
+    }
+  }
+
+  &__ticks-wrapper {
+    @include c-range-input__wrapper--placement();
+    height: 16px;
+    z-index: 1;
+
+    > svg {
+      overflow: visible;
+    }
+
+    .range-tick {
+      fill: #dedee4;
+    }
+
+    .range-value {
+      font-size: 12px;
+      fill: #343741;
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: pointer;
+    }
+  }
+
+  &__overlay-wrapper {
+    @include c-range-input__wrapper--placement();
+    position: absolute;
+    top: 0;
+    height: 100%;
+  }
+
+  &__marker {
+    position: absolute;
+    color: #005085;
+    margin: 0;
+    padding: 0;
+    transform: translateX(-50%);
+
+    &:not(.below) {
+      top: 0;
+    }
+    &.below {
+      bottom: 0;
+    }
+  }
+}

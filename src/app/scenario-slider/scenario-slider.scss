@@ -1,0 +1,22 @@
+legend {
+  margin-bottom: 20px;
+}
+
+.c-range-input {
+  &__marker {
+    position: absolute;
+    color: cornflowerblue;
+    transform: translateX(-50%);
+  }
+
+  &__display-wrapper {
+    display: flex;
+  }
+
+  &__value,
+  &__status {
+    font-size: 24px;
+    margin-top: 40px;
+    margin-right: 20px;
+  }
+}

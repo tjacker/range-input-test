@@ -1,0 +1,40 @@
+<legend class="t5" id="{{ scenarioSliderId }}">
+  <span>{{ selectedFearLabel }}</span>
+</legend>
+
+<app-range-input
+  ariaLabelledby="{{ scenarioSliderId }}"
+  name="{{ scenarioSliderId }}"
+  prefix="{{ prefix }}"
+  suffix="{{ suffix }}"
+  mgDisplayFormat="{{ mgDisplayFormat }}"
+  mgCommonFormsNestedFormControl
+  [min]="minimum"
+  [max]="maximum"
+  [step]="step"
+  [options]="options"
+  [dropDebounce]="0"
+  [dragDebounce]="0"
+  [ngModel]="value"
+  (rangeDrop)="onDropHandler($event)"
+  (rangeDrag)="onDragHandler()"
+>
+  <span
+    *ngIf="secondaryMarkerOptions"
+    class="c-range-input__marker"
+    [style.left.%]="secondaryMarkerOptions.placement"
+    [style.font-size.px]="24"
+  >
+    <fa-icon [icon]="faLocationPin"></fa-icon>
+  </span>
+</app-range-input>
+
+<div class="c-range-input__display-wrapper">
+  <div class="c-range-input__value">
+    <span>{{value}}</span>
+  </div>
+
+  <div class="c-range-input__status">
+    <span>{{status}}</span>
+  </div>
+</div>

@@ -1,0 +1,85 @@
+<div
+  class="c-range-input"
+  [ngClass]="{
+    'has-display-value': !options.hideDisplayValue,
+    'has-ticks': options.showTicks
+  }"
+>
+  <div class="c-range-input__wrapper">
+    <div
+      *ngIf="!options.hideDisplayValue"
+      class="c-range-input__display-wrapper"
+    >
+      <span #rangeInputDisplay class="c-range-input__display-value">
+        <span *ngIf="prefix">{{ prefix }}</span>
+        <span>{{ formattedDisplayValue }}</span>
+        <span *ngIf="suffix">{{ suffix }}</span>
+      </span>
+    </div>
+
+    <div class="c-range-input__field-wrapper">
+      <input
+        #rangeInputField
+        class="c-range-input__field"
+        type="range"
+        [attr.id]="id"
+        [attr.max]="max"
+        [attr.min]="min"
+        [attr.step]="step"
+        [mgCommonFormsOptionalAttributes]="{
+          'aria-label': ariaLabel,
+          'aria-labelledby': ariaLabelledby,
+          'aria-describedby': ariaDescribedby,
+          name: name
+        }"
+        [value]="value"
+        (blur)="onBlurEvent($event)"
+        (change)="onChangeEvent($event)"
+        (input)="onInputEvent($event)"
+      />
+    </div>
+
+    <div *ngIf="options.showTicks" class="c-range-input__ticks-wrapper">
+      <svg
+        role="presentation"
+        width="100%"
+        height="8"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect
+          *ngFor="let tick of tickData"
+          class="range-tick"
+          [attr.x]="tick.x + '%'"
+          y="-11"
+          width="1"
+          height="8"
+        ></rect>
+      </svg>
+      <svg
+        role="presentation"
+        width="100%"
+        height="14"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <ng-container *ngFor="let tick of tickData">
+          <text
+            *ngIf="tick.displayValue != null"
+            class="range-value"
+            [attr.x]="tick.x + '%'"
+            y="-1"
+            text-anchor="middle"
+            (click)="onTickValueClick(tick.value)"
+          >
+            <tspan *ngIf="prefix">{{ prefix }}</tspan>
+            <tspan>{{ tick.displayValue }}</tspan>
+            <tspan *ngIf="suffix">{{ suffix }}</tspan>
+          </text>
+        </ng-container>
+      </svg>
+    </div>
+
+    <div class="c-range-input__overlay-wrapper">
+      <ng-content></ng-content>
+    </div>
+  </div>
+</div>
