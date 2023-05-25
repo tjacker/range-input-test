@@ -42,8 +42,10 @@ export class ScenarioSliderComponent {
   }
 
   public onDropHandler(value: number): void {
-    this.status = 'Dropped';
     this.value = value;
+    setTimeout(() => {
+      this.status = 'Dropped';
+    }, 0);
   }
 
   private getSliderOptions(fearProperty: string) {
@@ -55,7 +57,7 @@ export class ScenarioSliderComponent {
     switch (fearProperty) {
       case 'greatRecessionLoss':
         return {
-          // convertValue: recessionConvertFormat,
+          convertValue: recessionConvertFormat,
           formatDisplayValue: recessionConvertFormat,
           formatTickValue: recessionConvertFormat,
         };
