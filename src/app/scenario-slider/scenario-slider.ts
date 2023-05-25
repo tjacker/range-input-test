@@ -55,7 +55,7 @@ export class ScenarioSliderComponent {
     switch (fearProperty) {
       case 'greatRecessionLoss':
         return {
-          convertValue: recessionConvertFormat,
+          // convertValue: recessionConvertFormat,
           formatDisplayValue: recessionConvertFormat,
           formatTickValue: recessionConvertFormat,
         };
