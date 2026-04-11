@@ -1,4 +1,4 @@
-export abstract class ValueConverter {
-  public abstract toView(value: any, ...args: any[]): any;
-  public abstract fromView(value: any, ...args: any[]): any;
+export abstract class ValueConverter<TViewValue = any, TModelValue = any> {
+  public abstract toView(value: TModelValue, ...args: any[]): TViewValue;
+  public abstract fromView(value: TViewValue, ...args: any[]): TModelValue;
 }

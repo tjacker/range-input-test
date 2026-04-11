@@ -7,7 +7,12 @@
   name="{{ scenarioSliderId }}"
   prefix="{{ prefix }}"
   suffix="{{ suffix }}"
+  mgBoundedFormat="{{ mgBoundedFormat }}"
   mgDisplayFormat="{{ mgDisplayFormat }}"
+  [mgNumberFormatConverterOptions]="{
+    format: '0',
+    maximum: this.maximum,
+  }"
   mgCommonFormsNestedFormControl
   [min]="minimum"
   [max]="maximum"

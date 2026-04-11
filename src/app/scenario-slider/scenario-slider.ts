@@ -1,5 +1,7 @@
 import { Component, Renderer2 } from '@angular/core';
 import { faLocationPin } from '@fortawesome/free-solid-svg-icons';
+import { RangeInputNumberFormatConverter } from '../shared/range-input/range-input-number-format-converter';
+import { ScenarioNumberFormatConverter } from './scenario-slider-number-format-converter';
 
 interface SecondaryMarkerOptions {
   placement: number;
@@ -10,13 +12,20 @@ interface SecondaryMarkerOptions {
   selector: 'app-scenario-slider',
   templateUrl: './scenario-slider.html',
   styleUrls: ['./scenario-slider.scss'],
+  providers: [
+    {
+      provide: RangeInputNumberFormatConverter,
+      useClass: ScenarioNumberFormatConverter,
+    },
+  ],
 })
 export class ScenarioSliderComponent {
   public selectedFearLabel = 'Great Recession';
   public step = 'any' as const;
+  public mgBoundedFormat = '0';
   public mgDisplayFormat = '0';
   public prefix = '';
-  public suffix = '';
+  public suffix = '%';
   public scenarioSliderId = 'scenario-slider-input';
   public fearProperty = 'greatRecessionLoss';
   public minimum = 0;

@@ -1,11 +1,12 @@
 import { NgControl } from '@angular/forms';
 import { InputControl } from '../input-control';
-import { NumberFormatValueConverter } from '../service/number-converter';
 import { ValueConverter } from '../service/value-converter';
+import { RangeInputNumberFormatConverter } from './range-input-number-format-converter';
 import {
   debounceTime,
   distinctUntilChanged,
   EMPTY,
+  filter,
   iif,
   of,
   Subject,
@@ -13,8 +14,6 @@ import {
   takeUntil,
 } from 'rxjs';
 import {
-  AfterViewInit,
-  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
@@ -35,12 +34,12 @@ let index = 0;
   styleUrls: ['./range-input.scss'],
   providers: [
     { provide: InputControl, useExisting: RangeInputComponent },
-    { provide: ValueConverter, useClass: NumberFormatValueConverter },
+    { provide: ValueConverter, useExisting: RangeInputNumberFormatConverter },
   ],
 })
 export class RangeInputComponent
   extends InputControl<string, number>
-  implements OnInit, AfterViewInit, OnDestroy
+  implements OnInit, OnDestroy
 {
   @Input() public ariaLabel?: string;
   @Input() public ariaLabelledby?: string;
@@ -51,173 +50,210 @@ export class RangeInputComponent
   @Input() public max: number;
   @Input() public min: number;
   @Input() public name?: string;
-  @Input() public options: RangeInputOptions;
   @Input() public prefix?: string;
   @Input() public step: number | 'any' = 1;
   @Input() public suffix?: string;
 
+  // TODO: Decimal places instead of bounded format (per Tim)
+  // eslint-disable-next-line @angular-eslint/no-input-rename
+  @Input('mgBoundedFormat') public boundedFormat = '0';
+
+  // TODO: Custom view formatters instead of display format (per Graham)
   // eslint-disable-next-line @angular-eslint/no-input-rename
   @Input('mgDisplayFormat') public displayFormat = '0';
+
+  // eslint-disable-next-line @angular-eslint/no-input-rename
+  @Input('mgNumberFormatConverterOptions')
+  public numberFormatConverterOptions: any;
+
+  @Input() public set options(value: RangeInputOptions) {
+    this._options = {
+      ...{
+        hideDisplayValue: true,
+        showProgressBar: false,
+        showTicks: false,
+        tickSteps: 21,
+        tickValueSteps: 5,
+      },
+      ...this._options,
+      ...value,
+    };
+  }
+
+  public get options(): RangeInputOptions {
+    return this._options;
+  }
 
   @Output() public rangeDrop = new EventEmitter<number>();
   @Output() public rangeDrag = new EventEmitter<number>();
 
-  public tickData: TickData[];
+  public displayValue: string;
+  public tickData: RangeInputTickData[];
 
-  @ViewChild('rangeInputField')
-  private rangeInputField: ElementRef<HTMLInputElement>;
-  @ViewChild('rangeInputDisplay')
-  private rangeInputDisplay: ElementRef<HTMLSpanElement>;
+  @ViewChild('input') private inputElementRef: ElementRef<HTMLInputElement>;
+  @ViewChild('inputDisplayValue')
+  private inputDisplayValueElementRef: ElementRef<HTMLSpanElement>;
 
-  private rangeInputUpdate$ = new Subject<number>();
-  private componentDestroyed$ = new Subject<boolean>();
+  private _options: RangeInputOptions = {};
   private isChangeEvent = false;
   private isInputEvent = false;
 
+  private readonly componentDestroyed$ = new Subject<boolean>();
+  private readonly updateOnDragOrDrop$ = new Subject<number>();
+
   public constructor(
     @Self() public model: NgControl,
-    protected valueConverter: ValueConverter,
-    private renderer: Renderer2,
-    private cdr: ChangeDetectorRef
+    protected valueConverter: ValueConverter<string, number>,
+    private renderer: Renderer2
   ) {
     super();
 
     this.model.valueAccessor = this;
-    this.registerAfterOnChange((value: number): void =>
-      this.rangeInputUpdate$.next(value)
-    );
+
+    this.model.valueChanges
+      .pipe(
+        takeUntil(this.componentDestroyed$),
+        filter(
+          (): boolean =>
+            this.isChangeEvent === false && this.isInputEvent === false
+        )
+      )
+      .subscribe(this.updateProgressDisplay);
+
+    this.registerAfterOnChange(this.updateAfterOnChange);
   }
 
-  public get formattedDisplayValue(): string {
-    if (typeof this.options.formatDisplayValue === 'function') {
-      return this.options.formatDisplayValue(+this.value);
-    }
-
-    return this.valueConverter.toView(this.value, this.displayFormat);
-  }
+  private updateAfterOnChange = (value: number): void => {
+    this.updateProgressDisplay(value);
+    this.updateOnDragOrDrop$.next(value);
+  };
 
   public ngOnInit(): void {
-    this.options = {
-      ...new RangeInputOptions(),
-      ...this.options,
-    };
-
-    if (this.options.showTicks) {
+    if (this._options.showTicks) {
       this.generateTickData();
     }
 
-    this.rangeInputUpdate$
-      .pipe(
-        takeUntil(this.componentDestroyed$),
-        debounceTime(this.dropDebounce),
-        switchMap((rangeInputValue: number) =>
-          iif(() => this.isChangeEvent, of(rangeInputValue), EMPTY)
-        ),
-        distinctUntilChanged()
-      )
-      .subscribe((rangeInputValue: number) => {
-        this.rangeDrop.emit(rangeInputValue);
-        this.isChangeEvent = false;
-      });
-
-    this.rangeInputUpdate$
+    // Input observable needs to be defined before change observable or change will fire first in some cases
+    this.updateOnDragOrDrop$
       .pipe(
         takeUntil(this.componentDestroyed$),
         debounceTime(this.dragDebounce),
-        switchMap((rangeInputValue: number) =>
-          iif(() => this.isInputEvent, of(rangeInputValue), EMPTY)
+        switchMap((value: number) =>
+          iif((): boolean => this.isInputEvent === true, of(value), EMPTY)
         ),
         distinctUntilChanged()
       )
-      .subscribe((rangeInputValue: number) => {
-        this.rangeDrag.emit(rangeInputValue);
+      .subscribe((value: number): void => {
+        console.log('EMIT INPUT', this.dragDebounce);
         this.isInputEvent = false;
+        this.rangeDrag.emit(value);
       });
-  }
 
-  public ngAfterViewInit(): void {
-    this.updateProgressDisplay(this.value);
+    this.updateOnDragOrDrop$
+      .pipe(
+        takeUntil(this.componentDestroyed$),
+        debounceTime(this.dropDebounce),
+        switchMap((value: number) =>
+          iif((): boolean => this.isChangeEvent === true, of(value), EMPTY)
+        ),
+        distinctUntilChanged()
+      )
+      .subscribe((value: number): void => {
+        console.log('EMIT CHANGE', this.dropDebounce);
+        this.isChangeEvent = false;
+        this.rangeDrop.emit(value);
+      });
   }
 
   public ngOnDestroy(): void {
     this.componentDestroyed$.next(true);
   }
 
+  public getDisplayValue(value: number): string {
+    if (typeof this._options.formatDisplayValue === 'function') {
+      return this._options.formatDisplayValue(value);
+    }
+    return this.valueConverter.toView(value, this.displayFormat);
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public onBlurEvent(event: FocusEvent): void {
+  protected onBlurEvent(event: FocusEvent): void {
     this.onTouched();
   }
 
-  public onChangeEvent(event: Event): void {
+  protected onChangeEvent(event: Event): void {
+    console.log('CHANGE');
     this.isChangeEvent = true;
     this.onChange((event.target as HTMLInputElement).value);
   }
 
-  public onInputEvent(event: Event): void {
+  protected onInputEvent(event: Event): void {
     this.isInputEvent = true;
-    const target = event.target as HTMLInputElement;
-
-    if (typeof this.options.convertValue === 'function') {
-      target.value = this.options.convertValue(+target.value).toString();
-    }
-
-    this.onChange(target.value);
+    console.log('INPUT');
+    this.onChange((event.target as HTMLInputElement).value);
   }
 
-  public onTickValueClick(value: string) {
-    if (this.rangeInputField.nativeElement.value === value) return;
+  protected onMouseupEvent(event: Event): void {
+    const isSafari = /^((?!chrome|chromium).)*safari/i.test(
+      navigator.userAgent
+    );
+    if (isSafari) {
+      this.onChangeEvent(event);
+    }
+  }
 
+  protected onTickValueClick(value: string): void {
+    if (this.inputElementRef.nativeElement.value === value) {
+      return;
+    }
+    this.isChangeEvent = true;
     this.onChange(value);
-    this.cdr.detectChanges();
-    this.rangeInputField.nativeElement.dispatchEvent(
-      new Event('change', { bubbles: true })
+  }
+
+  protected writeValueToView(value: string): void {
+    console.log('writeValueToView', value);
+    if (this.inputElementRef?.nativeElement != null) {
+      this.renderer.setProperty(
+        this.inputElementRef.nativeElement,
+        'value',
+        value
+      );
+    }
+  }
+
+  protected override viewValueToModelValue(value: string): number {
+    console.log('viewValueToModelValue', value);
+    return this.valueConverter.fromView(
+      value,
+      this.numberFormatConverterOptions ?? this.boundedFormat
     );
   }
 
-  protected override onChange(value: string): void {
-    const rangeValue: string = value.replace(/,/g, '');
-
-    super.onChange(rangeValue);
-  }
-
-  protected override valueToModel(value: string): number {
-    return +value;
-  }
-
-  protected override valueToView(value: number): string {
-    if (value == null) return null;
-
-    const valueToString: string = value.toString();
-
-    if (this.rangeInputField) {
-      this.updateProgressDisplay(valueToString);
+  protected override modelValueToViewValue(value: number): string | undefined {
+    console.log('modelValueToViewValue', value);
+    if (value == null) {
+      return undefined;
     }
-    return valueToString;
+    return this.valueConverter.toView(
+      value,
+      this.numberFormatConverterOptions ?? this.boundedFormat
+    );
   }
 
-  private getFormattedTickValue(value: number): string {
-    if (typeof this.options.formatTickValue === 'function') {
-      return this.options.formatTickValue(value);
-    }
-
-    return this.valueConverter.toView(value, this.displayFormat);
-  }
-
-  private updateProgressDisplay(value: string): void {
+  private updateProgressDisplay(value: number): void {
     const sliderProgress: number =
-      ((+value - this.min) / (this.max - this.min)) * 100;
+      ((value - this.min) / (this.max - this.min)) * 100;
 
-    if (!this.options.hideDisplayValue) {
-      this.renderer.setStyle(
-        this.rangeInputDisplay.nativeElement,
-        'left',
-        `${sliderProgress}%`
-      );
-    }
+    this.displayValue = this.getDisplayValue(value);
+    this.renderer.setStyle(
+      this.inputDisplayValueElementRef.nativeElement,
+      'left',
+      `${sliderProgress}%`
+    );
 
     if (this.options.showProgressBar) {
       this.renderer.setStyle(
-        this.rangeInputField.nativeElement,
+        this.inputElementRef.nativeElement,
         'background',
         `linear-gradient(to right, #005F9E ${sliderProgress}%, #C2C2CD ${sliderProgress}%)`
       );
@@ -226,9 +262,9 @@ export class RangeInputComponent
 
   private generateTickData(): void {
     const tickStep: number =
-      (this.max - this.min) / (this.options.tickSteps - 1);
+      (this.max - this.min) / (this._options.tickSteps - 1);
 
-    this.tickData = Array(this.options.tickSteps)
+    this.tickData = Array(this._options.tickSteps)
       .fill(null)
       .map((_, i: number) => {
         const value: number = tickStep * i + this.min;
@@ -237,13 +273,22 @@ export class RangeInputComponent
           x: ((tickStep * i) / (this.max - this.min)) * 100,
           value: value.toString(),
           displayValue:
-            i % this.options.tickValueSteps === 0
+            i % this._options.tickValueSteps === 0
               ? this.getFormattedTickValue(value)
               : null,
         };
       });
   }
+
+  private getFormattedTickValue(value: number): string {
+    if (typeof this._options.formatTickValue === 'function') {
+      return this._options.formatTickValue(value);
+    }
+    return this.valueConverter.toView(value, this.displayFormat);
+  }
 }
+
+export type RangeInputConvertFormat = (value: number) => string;
 
 export class RangeInputOptions {
   public hideDisplayValue? = true;
@@ -256,10 +301,8 @@ export class RangeInputOptions {
   public formatTickValue?: RangeInputConvertFormat;
 }
 
-export type RangeInputConvertFormat = (value: number) => string;
-
-interface TickData {
-  x: number;
-  value: string;
+export interface RangeInputTickData {
   displayValue: string;
+  value: string;
+  x: number;
 }

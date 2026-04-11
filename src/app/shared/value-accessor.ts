@@ -3,46 +3,44 @@ import { ControlValueAccessor } from '@angular/forms';
 export abstract class ValueAccessor<TViewValue, TModelValue>
   implements ControlValueAccessor
 {
-  public get value(): TViewValue {
-    return this._value;
-  }
-
-  public set value(value: TViewValue) {
-    if (value !== this._value) {
-      this._value = this.executeValueToView(this.executeValueToModel(value));
-    }
-  }
-
-  private _value: TViewValue;
-  private beforeValueToModelFns: ((value: TViewValue) => TViewValue)[] = [];
-  private afterValueToModelFns: ((value: TModelValue) => TModelValue)[] = [];
-  private beforeValueToViewFns: ((value: TModelValue) => TModelValue)[] = [];
-  private afterValueToViewFns: ((value: TViewValue) => TViewValue)[] = [];
+  private beforeViewValueToModelValueFns: ((
+    value: TViewValue
+  ) => TViewValue)[] = [];
+  private afterViewValueToModelValueFns: ((
+    value: TModelValue
+  ) => TModelValue)[] = [];
+  private beforeModelValueToViewValueFns: ((
+    value: TModelValue
+  ) => TModelValue)[] = [];
+  private afterModelValueToViewValueFns: ((value: TViewValue) => TViewValue)[] =
+    [];
   private beforeOnChangeFns: ((value: TModelValue) => void)[] = [];
   private afterOnChangeFns: ((value: TModelValue) => void)[] = [];
   private onChangeFns: ((value: TModelValue) => void)[] = [];
   private onTouchedFns: (() => void)[] = [];
 
-  public registerBeforeValueToModel(
+  public registerBeforeViewValueToModelValue(
     fn: (value: TViewValue) => TViewValue
   ): void {
-    this.beforeValueToModelFns.push(fn);
+    this.beforeViewValueToModelValueFns.push(fn);
   }
 
-  public registerAfterValueToModel(
+  public registerAfterViewValueToModelValue(
     fn: (value: TModelValue) => TModelValue
   ): void {
-    this.afterValueToModelFns.unshift(fn);
+    this.afterViewValueToModelValueFns.unshift(fn);
   }
 
-  public registerBeforeValueToView(
+  public registerBeforeModelValueToViewValue(
     fn: (value: TModelValue) => TModelValue
   ): void {
-    this.beforeValueToViewFns.push(fn);
+    this.beforeModelValueToViewValueFns.push(fn);
   }
 
-  public registerAfterValueToView(fn: (value: TViewValue) => TViewValue): void {
-    this.afterValueToViewFns.unshift(fn);
+  public registerAfterModelValueToViewValue(
+    fn: (value: TViewValue) => TViewValue
+  ): void {
+    this.afterModelValueToViewValueFns.unshift(fn);
   }
 
   public registerBeforeOnChange(fn: (value: TModelValue) => void): void {
@@ -62,11 +60,13 @@ export abstract class ValueAccessor<TViewValue, TModelValue>
   }
 
   public writeValue(value: TModelValue): void {
-    this._value = this.executeValueToView(value);
+    this.writeValueToView(this.executeModelValueToViewValue(value));
   }
 
+  protected abstract writeValueToView(value: TViewValue): void;
+
   protected onChange(value: TViewValue): void {
-    const modelValue: TModelValue = this.executeValueToModel(value);
+    const modelValue: TModelValue = this.executeViewValueToModelValue(value);
     this.executeRegisteredFns(this.beforeOnChangeFns, modelValue);
     this.executeRegisteredFns(this.onChangeFns, modelValue);
     this.executeRegisteredFns(this.afterOnChangeFns, modelValue);
@@ -77,28 +77,28 @@ export abstract class ValueAccessor<TViewValue, TModelValue>
     this.executeRegisteredFns(this.onTouchedFns);
   }
 
-  protected valueToModel(value: TViewValue): TModelValue {
+  protected viewValueToModelValue(value: TViewValue): TModelValue {
     return value as unknown as TModelValue;
   }
 
-  protected valueToView(value: TModelValue): TViewValue {
+  protected modelValueToViewValue(value: TModelValue): TViewValue {
     return value as unknown as TViewValue;
   }
 
-  private executeValueToModel(value: TViewValue): TModelValue {
+  private executeViewValueToModelValue(value: TViewValue): TModelValue {
     return this.executeRegisteredFns(
-      this.afterValueToModelFns,
-      this.valueToModel(
-        this.executeRegisteredFns(this.beforeValueToModelFns, value)
+      this.afterViewValueToModelValueFns,
+      this.viewValueToModelValue(
+        this.executeRegisteredFns(this.beforeViewValueToModelValueFns, value)
       )
     );
   }
 
-  private executeValueToView(value: TModelValue): TViewValue {
+  private executeModelValueToViewValue(value: TModelValue): TViewValue {
     return this.executeRegisteredFns(
-      this.afterValueToViewFns,
-      this.valueToView(
-        this.executeRegisteredFns(this.beforeValueToViewFns, value)
+      this.afterModelValueToViewValueFns,
+      this.modelValueToViewValue(
+        this.executeRegisteredFns(this.beforeModelValueToViewValueFns, value)
       )
     );
   }

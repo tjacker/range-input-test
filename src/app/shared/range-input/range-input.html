@@ -7,19 +7,19 @@
 >
   <div class="c-range-input__wrapper">
     <div
-      *ngIf="!options.hideDisplayValue"
+      [hidden]="options.hideDisplayValue"
       class="c-range-input__display-wrapper"
     >
-      <span #rangeInputDisplay class="c-range-input__display-value">
+      <span #inputDisplayValue class="c-range-input__display-value">
         <span *ngIf="prefix">{{ prefix }}</span>
-        <span>{{ formattedDisplayValue }}</span>
+        <span>{{ displayValue }}</span>
         <span *ngIf="suffix">{{ suffix }}</span>
       </span>
     </div>
 
     <div class="c-range-input__field-wrapper">
       <input
-        #rangeInputField
+        #input
         class="c-range-input__field"
         type="range"
         [attr.id]="id"
@@ -32,10 +32,11 @@
           'aria-describedby': ariaDescribedby,
           name: name
         }"
-        [value]="value"
         (blur)="onBlurEvent($event)"
         (change)="onChangeEvent($event)"
         (input)="onInputEvent($event)"
+        (mouseup)="onMouseupEvent($event)"
+        (touchend)="onMouseupEvent($event)"
       />
     </div>
 
@@ -50,7 +51,7 @@
           *ngFor="let tick of tickData"
           class="range-tick"
           [attr.x]="tick.x + '%'"
-          y="-11"
+          y="-10"
           width="1"
           height="8"
         ></rect>
@@ -66,7 +67,6 @@
             *ngIf="tick.displayValue != null"
             class="range-value"
             [attr.x]="tick.x + '%'"
-            y="-1"
             text-anchor="middle"
             (click)="onTickValueClick(tick.value)"
           >
