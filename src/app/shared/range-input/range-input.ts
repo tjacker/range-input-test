@@ -29,13 +29,14 @@ import {
 let index = 0;
 
 @Component({
-  selector: 'app-range-input',
-  templateUrl: './range-input.html',
-  styleUrls: ['./range-input.scss'],
-  providers: [
-    { provide: InputControl, useExisting: RangeInputComponent },
-    { provide: ValueConverter, useExisting: RangeInputNumberFormatConverter },
-  ],
+    selector: 'app-range-input',
+    templateUrl: './range-input.html',
+    styleUrls: ['./range-input.scss'],
+    providers: [
+        { provide: InputControl, useExisting: RangeInputComponent },
+        { provide: ValueConverter, useExisting: RangeInputNumberFormatConverter },
+    ],
+    standalone: false
 })
 export class RangeInputComponent
   extends InputControl<string, number>

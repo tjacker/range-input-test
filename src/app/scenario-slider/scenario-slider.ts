@@ -9,15 +9,16 @@ interface SecondaryMarkerOptions {
 }
 
 @Component({
-  selector: 'app-scenario-slider',
-  templateUrl: './scenario-slider.html',
-  styleUrls: ['./scenario-slider.scss'],
-  providers: [
-    {
-      provide: RangeInputNumberFormatConverter,
-      useClass: ScenarioNumberFormatConverter,
-    },
-  ],
+    selector: 'app-scenario-slider',
+    templateUrl: './scenario-slider.html',
+    styleUrls: ['./scenario-slider.scss'],
+    providers: [
+        {
+            provide: RangeInputNumberFormatConverter,
+            useClass: ScenarioNumberFormatConverter,
+        },
+    ],
+    standalone: false
 })
 export class ScenarioSliderComponent {
   public selectedFearLabel = 'Great Recession';
