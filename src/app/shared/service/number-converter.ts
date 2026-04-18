@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import * as numeral from 'numeral';
+import numeral from 'numeral';
 import { ValueConverter } from './value-converter';
 
 @Injectable({ providedIn: 'root' })
