@@ -29,7 +29,7 @@ import {
 let index = 0;
 
 @Component({
-  selector: 'app-range-input',
+  selector: 'mg-range-input',
   templateUrl: './range-input.html',
   styleUrls: ['./range-input.scss'],
   providers: [

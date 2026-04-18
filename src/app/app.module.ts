@@ -5,7 +5,6 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ScenarioSliderComponent } from './scenario-slider/scenario-slider';
-import { ScenarioNumberFormatConverter } from './scenario-slider/scenario-slider-number-format-converter';
 import { RangeInputNumberFormatConverter } from './shared/range-input/range-input-number-format-converter';
 import { NumberFormatValueConverter } from './shared/service/number-converter';
 import { SharedModule } from './shared/shared.module';

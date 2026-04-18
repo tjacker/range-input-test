@@ -1,4 +1,4 @@
-import { Component, Renderer2 } from '@angular/core';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 import { faLocationPin } from '@fortawesome/free-solid-svg-icons';
 import { RangeInputNumberFormatConverter } from '../shared/range-input/range-input-number-format-converter';
 import { ScenarioNumberFormatConverter } from './scenario-slider-number-format-converter';
@@ -9,7 +9,7 @@ interface SecondaryMarkerOptions {
 }
 
 @Component({
-  selector: 'app-scenario-slider',
+  selector: 'mg-scenario-slider',
   templateUrl: './scenario-slider.html',
   styleUrls: ['./scenario-slider.scss'],
   providers: [
@@ -20,7 +20,7 @@ interface SecondaryMarkerOptions {
   ],
   standalone: false,
 })
-export class ScenarioSliderComponent {
+export class ScenarioSliderComponent implements OnInit {
   public selectedFearLabel = 'Great Recession';
   public step = 'any' as const;
   public mgBoundedFormat = '0';

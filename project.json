@@ -8,7 +8,7 @@
     }
   },
   "sourceRoot": "src",
-  "prefix": "app",
+  "prefix": "mg",
   "targets": {
     "build": {
       "executor": "@angular/build:application",
@@ -17,18 +17,11 @@
           "base": "dist/range-input-test"
         },
         "index": "src/index.html",
-        "polyfills": [
-          "zone.js"
-        ],
+        "polyfills": ["zone.js"],
         "tsConfig": "tsconfig.app.json",
         "inlineStyleLanguage": "scss",
-        "assets": [
-          "src/favicon.ico",
-          "src/assets"
-        ],
-        "styles": [
-          "src/styles.scss"
-        ],
+        "assets": ["src/favicon.ico", "src/assets"],
+        "styles": ["src/styles.scss"],
         "scripts": [],
         "browser": "src/main.ts"
       },
@@ -56,9 +49,7 @@
         }
       },
       "defaultConfiguration": "production",
-      "outputs": [
-        "{options.outputPath.base}"
-      ]
+      "outputs": ["{options.outputPath.base}"]
     },
     "serve": {
       "executor": "@angular/build:dev-server",

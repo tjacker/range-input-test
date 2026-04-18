@@ -2,7 +2,7 @@
   <span>{{ selectedFearLabel }}</span>
 </legend>
 
-<app-range-input ariaLabelledby="{{ scenarioSliderId }}" name="{{ scenarioSliderId }}" prefix="{{ prefix }}"
+<mg-range-input ariaLabelledby="{{ scenarioSliderId }}" name="{{ scenarioSliderId }}" prefix="{{ prefix }}"
   suffix="{{ suffix }}" mgBoundedFormat="{{ mgBoundedFormat }}" mgDisplayFormat="{{ mgDisplayFormat }}"
   [mgNumberFormatConverterOptions]="{
     format: '0',
@@ -15,7 +15,7 @@
     <fa-icon [icon]="faLocationPin"></fa-icon>
   </span>
   }
-</app-range-input>
+</mg-range-input>
 
 <div class="c-range-input__display-wrapper">
   <div class="c-range-input__value">
