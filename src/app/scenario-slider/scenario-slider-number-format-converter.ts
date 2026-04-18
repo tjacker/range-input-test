@@ -8,20 +8,18 @@ export interface ScenarioNumberFormatConverterOptions {
 }
 
 @Injectable()
-export class ScenarioNumberFormatConverter
-  implements RangeInputNumberFormatConverter
-{
+export class ScenarioNumberFormatConverter implements RangeInputNumberFormatConverter {
   public constructor(
-    protected numberFormatValueConverter: NumberFormatValueConverter
+    protected numberFormatValueConverter: NumberFormatValueConverter,
   ) {}
 
   public toView(
     value: number,
-    options: ScenarioNumberFormatConverterOptions
+    options: ScenarioNumberFormatConverterOptions,
   ): string {
     const x: string = this.numberFormatValueConverter.toView(
       this.test(value, options),
-      options.format
+      options.format,
     );
     // console.log('ScenarioNumberFormatConverter toView', x, options);
     return x;
@@ -29,11 +27,11 @@ export class ScenarioNumberFormatConverter
 
   public fromView(
     value: string,
-    options: ScenarioNumberFormatConverterOptions
+    options: ScenarioNumberFormatConverterOptions,
   ): number {
     const x: number = this.test(
       this.numberFormatValueConverter.fromView(value, options.format),
-      options
+      options,
     );
     // console.log('ScenarioNumberFormatConverter fromView', x, options);
     return x;
@@ -41,7 +39,7 @@ export class ScenarioNumberFormatConverter
 
   protected test(
     value: number,
-    options: ScenarioNumberFormatConverterOptions
+    options: ScenarioNumberFormatConverterOptions,
   ): number {
     return Math.round(value) > options.maximum
       ? options.maximum

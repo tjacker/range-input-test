@@ -29,14 +29,14 @@ import {
 let index = 0;
 
 @Component({
-    selector: 'app-range-input',
-    templateUrl: './range-input.html',
-    styleUrls: ['./range-input.scss'],
-    providers: [
-        { provide: InputControl, useExisting: RangeInputComponent },
-        { provide: ValueConverter, useExisting: RangeInputNumberFormatConverter },
-    ],
-    standalone: false
+  selector: 'app-range-input',
+  templateUrl: './range-input.html',
+  styleUrls: ['./range-input.scss'],
+  providers: [
+    { provide: InputControl, useExisting: RangeInputComponent },
+    { provide: ValueConverter, useExisting: RangeInputNumberFormatConverter },
+  ],
+  standalone: false,
 })
 export class RangeInputComponent
   extends InputControl<string, number>
@@ -105,7 +105,7 @@ export class RangeInputComponent
   public constructor(
     @Self() public model: NgControl,
     protected valueConverter: ValueConverter<string, number>,
-    private renderer: Renderer2
+    private renderer: Renderer2,
   ) {
     super();
 
@@ -116,8 +116,8 @@ export class RangeInputComponent
         takeUntil(this.componentDestroyed$),
         filter(
           (): boolean =>
-            this.isChangeEvent === false && this.isInputEvent === false
-        )
+            this.isChangeEvent === false && this.isInputEvent === false,
+        ),
       )
       .subscribe(this.updateProgressDisplay);
 
@@ -140,9 +140,9 @@ export class RangeInputComponent
         takeUntil(this.componentDestroyed$),
         debounceTime(this.dragDebounce),
         switchMap((value: number) =>
-          iif((): boolean => this.isInputEvent === true, of(value), EMPTY)
+          iif((): boolean => this.isInputEvent === true, of(value), EMPTY),
         ),
-        distinctUntilChanged()
+        distinctUntilChanged(),
       )
       .subscribe((value: number): void => {
         console.log('EMIT INPUT', this.dragDebounce);
@@ -155,9 +155,9 @@ export class RangeInputComponent
         takeUntil(this.componentDestroyed$),
         debounceTime(this.dropDebounce),
         switchMap((value: number) =>
-          iif((): boolean => this.isChangeEvent === true, of(value), EMPTY)
+          iif((): boolean => this.isChangeEvent === true, of(value), EMPTY),
         ),
-        distinctUntilChanged()
+        distinctUntilChanged(),
       )
       .subscribe((value: number): void => {
         console.log('EMIT CHANGE', this.dropDebounce);
@@ -196,7 +196,7 @@ export class RangeInputComponent
 
   protected onMouseupEvent(event: Event): void {
     const isSafari = /^((?!chrome|chromium).)*safari/i.test(
-      navigator.userAgent
+      navigator.userAgent,
     );
     if (isSafari) {
       this.onChangeEvent(event);
@@ -217,7 +217,7 @@ export class RangeInputComponent
       this.renderer.setProperty(
         this.inputElementRef.nativeElement,
         'value',
-        value
+        value,
       );
     }
   }
@@ -226,7 +226,7 @@ export class RangeInputComponent
     console.log('viewValueToModelValue', value);
     return this.valueConverter.fromView(
       value,
-      this.numberFormatConverterOptions ?? this.boundedFormat
+      this.numberFormatConverterOptions ?? this.boundedFormat,
     );
   }
 
@@ -237,7 +237,7 @@ export class RangeInputComponent
     }
     return this.valueConverter.toView(
       value,
-      this.numberFormatConverterOptions ?? this.boundedFormat
+      this.numberFormatConverterOptions ?? this.boundedFormat,
     );
   }
 
@@ -249,14 +249,14 @@ export class RangeInputComponent
     this.renderer.setStyle(
       this.inputDisplayValueElementRef.nativeElement,
       'left',
-      `${sliderProgress}%`
+      `${sliderProgress}%`,
     );
 
     if (this.options.showProgressBar) {
       this.renderer.setStyle(
         this.inputElementRef.nativeElement,
         'background',
-        `linear-gradient(to right, #005F9E ${sliderProgress}%, #C2C2CD ${sliderProgress}%)`
+        `linear-gradient(to right, #005F9E ${sliderProgress}%, #C2C2CD ${sliderProgress}%)`,
       );
     }
   }

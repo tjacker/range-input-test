@@ -1,82 +1,57 @@
-<div
-  class="c-range-input"
-  [ngClass]="{
+<div class="c-range-input" [ngClass]="{
     'has-display-value': !options.hideDisplayValue,
     'has-ticks': options.showTicks
-  }"
->
+  }">
   <div class="c-range-input__wrapper">
-    <div
-      [hidden]="options.hideDisplayValue"
-      class="c-range-input__display-wrapper"
-    >
+    <div [hidden]="options.hideDisplayValue" class="c-range-input__display-wrapper">
       <span #inputDisplayValue class="c-range-input__display-value">
-        <span *ngIf="prefix">{{ prefix }}</span>
+        @if (prefix) {
+        <span>{{ prefix }}</span>
+        }
         <span>{{ displayValue }}</span>
-        <span *ngIf="suffix">{{ suffix }}</span>
+        @if (suffix) {
+        <span>{{ suffix }}</span>
+        }
       </span>
     </div>
 
     <div class="c-range-input__field-wrapper">
-      <input
-        #input
-        class="c-range-input__field"
-        type="range"
-        [attr.id]="id"
-        [attr.max]="max"
-        [attr.min]="min"
-        [attr.step]="step"
-        [mgCommonFormsOptionalAttributes]="{
+      <input #input class="c-range-input__field" type="range" [attr.id]="id" [attr.max]="max" [attr.min]="min"
+        [attr.step]="step" [mgCommonFormsOptionalAttributes]="{
           'aria-label': ariaLabel,
           'aria-labelledby': ariaLabelledby,
           'aria-describedby': ariaDescribedby,
           name: name
-        }"
-        (blur)="onBlurEvent($event)"
-        (change)="onChangeEvent($event)"
-        (input)="onInputEvent($event)"
-        (mouseup)="onMouseupEvent($event)"
-        (touchend)="onMouseupEvent($event)"
-      />
+        }" (blur)="onBlurEvent($event)" (change)="onChangeEvent($event)" (input)="onInputEvent($event)"
+        (mouseup)="onMouseupEvent($event)" (touchend)="onMouseupEvent($event)" />
     </div>
 
-    <div *ngIf="options.showTicks" class="c-range-input__ticks-wrapper">
-      <svg
-        role="presentation"
-        width="100%"
-        height="8"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <rect
-          *ngFor="let tick of tickData"
-          class="range-tick"
-          [attr.x]="tick.x + '%'"
-          y="-10"
-          width="1"
-          height="8"
-        ></rect>
+    @if (options.showTicks) {
+    <div class="c-range-input__ticks-wrapper">
+      <svg role="presentation" width="100%" height="8" xmlns="http://www.w3.org/2000/svg">
+        @for (tick of tickData; track tick) {
+        <rect class="range-tick" [attr.x]="tick.x + '%'" y="-10" width="1" height="8"></rect>
+        }
       </svg>
-      <svg
-        role="presentation"
-        width="100%"
-        height="14"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <ng-container *ngFor="let tick of tickData">
-          <text
-            *ngIf="tick.displayValue != null"
-            class="range-value"
-            [attr.x]="tick.x + '%'"
-            text-anchor="middle"
-            (click)="onTickValueClick(tick.value)"
-          >
-            <tspan *ngIf="prefix">{{ prefix }}</tspan>
+      <svg role="presentation" width="100%" height="14" xmlns="http://www.w3.org/2000/svg">
+        @for (tick of tickData; track tick) {
+        <ng-container>
+          @if (tick.displayValue != null) {
+          <text class="range-value" [attr.x]="tick.x + '%'" text-anchor="middle" (click)="onTickValueClick(tick.value)">
+            @if (prefix) {
+            <tspan>{{ prefix }}</tspan>
+            }
             <tspan>{{ tick.displayValue }}</tspan>
-            <tspan *ngIf="suffix">{{ suffix }}</tspan>
+            @if (suffix) {
+            <tspan>{{ suffix }}</tspan>
+            }
           </text>
+          }
         </ng-container>
+        }
       </svg>
     </div>
+    }
 
     <div class="c-range-input__overlay-wrapper">
       <ng-content></ng-content>

@@ -3,7 +3,7 @@ import { ValueAccessor } from './value-accessor';
 
 export abstract class InputControl<
   TViewValue,
-  TModelValue
+  TModelValue,
 > extends ValueAccessor<TViewValue, TModelValue> {
   public abstract model: NgControl;
 

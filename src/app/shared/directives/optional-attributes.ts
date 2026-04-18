@@ -1,14 +1,17 @@
 import { Directive, ElementRef, Input, OnInit, Renderer2 } from '@angular/core';
 
 @Directive({
-    selector: '[mgCommonFormsOptionalAttributes]',
-    standalone: false
+  selector: '[mgCommonFormsOptionalAttributes]',
+  standalone: false,
 })
 export class OptionalAttributesDirective implements OnInit {
   @Input('mgCommonFormsOptionalAttributes')
   public attributes: OptionalAttributes;
 
-  public constructor(private elRef: ElementRef, private renderer: Renderer2) {}
+  public constructor(
+    private elRef: ElementRef,
+    private renderer: Renderer2,
+  ) {}
 
   public ngOnInit(): void {
     this.setAttributes(this.attributes);
@@ -27,7 +30,7 @@ export class OptionalAttributesDirective implements OnInit {
       this.renderer.setAttribute(
         this.elRef.nativeElement,
         attr,
-        value as string
+        value as string,
       );
     }
   }

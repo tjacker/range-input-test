@@ -1,11 +1,12 @@
 @use "sass:math";
+@use "sass:color";
 
 $barHeight: 3px;
 $barBorderRadius: 3px;
 $barBackground: #c2c2cd;
 $barPadding: 10px;
 $handleBackground: #005f9e;
-$handleActiveBackground: darken($handleBackground, 5%);
+$handleActiveBackground: color.adjust($handleBackground, $lightness: -5%);
 $handleSize: 20px;
 $handleSizeFirefox: 16px; // border increases handle size to equal value above
 

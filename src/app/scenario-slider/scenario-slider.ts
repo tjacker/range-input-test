@@ -9,16 +9,16 @@ interface SecondaryMarkerOptions {
 }
 
 @Component({
-    selector: 'app-scenario-slider',
-    templateUrl: './scenario-slider.html',
-    styleUrls: ['./scenario-slider.scss'],
-    providers: [
-        {
-            provide: RangeInputNumberFormatConverter,
-            useClass: ScenarioNumberFormatConverter,
-        },
-    ],
-    standalone: false
+  selector: 'app-scenario-slider',
+  templateUrl: './scenario-slider.html',
+  styleUrls: ['./scenario-slider.scss'],
+  providers: [
+    {
+      provide: RangeInputNumberFormatConverter,
+      useClass: ScenarioNumberFormatConverter,
+    },
+  ],
+  standalone: false,
 })
 export class ScenarioSliderComponent {
   public selectedFearLabel = 'Great Recession';
@@ -77,7 +77,7 @@ export class ScenarioSliderComponent {
   }
 
   private getSecondaryMarkerOptions(
-    fearProperty: string
+    fearProperty: string,
   ): SecondaryMarkerOptions | null {
     if (fearProperty === 'greatRecessionLoss') {
       const placement = (10 / this.maximum) * 100;
@@ -94,7 +94,7 @@ export class ScenarioSliderComponent {
       ...this.getSliderOptions(this.fearProperty),
     };
     this.secondaryMarkerOptions = this.getSecondaryMarkerOptions(
-      this.fearProperty
+      this.fearProperty,
     );
   }
 }
