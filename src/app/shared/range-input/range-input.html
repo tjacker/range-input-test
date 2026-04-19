@@ -5,7 +5,7 @@
     'has-ticks': options.showTicks,
     'range-mode': options.enableRangeMode,
   }">
-  <div class="c-range-input__wrapper">
+  <div class="c-range-input__wrapper" [ngClass]="options.customProgressClass">
     <div [hidden]="options.hideDisplayValue" class="c-range-input__display-wrapper">
       <span #inputDisplayValue class="c-range-input__display-value">
         @if (prefix) {
@@ -18,12 +18,13 @@
       </span>
     </div>
 
-    <div class="c-range-input__field-wrapper">
+    <div class="c-range-input__field-wrapper" [ngClass]="options.customTrackClass">
       @if (options.enableRangeMode) {
         <!-- Dual-handle mode: Two input elements for min and max -->
         <input
           #minInput
           class="c-range-input__field c-range-input__field--min"
+          [ngClass]="options.customHandleClass"
           type="range"
           [attr.id]="id + '-min'"
           [attr.max]="max"
@@ -48,6 +49,7 @@
         <input
           #maxInput
           class="c-range-input__field c-range-input__field--max"
+          [ngClass]="options.customHandleClass"
           type="range"
           [attr.id]="id + '-max'"
           [attr.max]="max"
@@ -74,6 +76,7 @@
         <input
           #input
           class="c-range-input__field"
+          [ngClass]="options.customHandleClass"
           type="range"
           [attr.id]="id"
           [attr.max]="max"
@@ -97,7 +100,7 @@
     </div>
 
     @if (options.showTicks) {
-      <div class="c-range-input__ticks-wrapper">
+      <div class="c-range-input__ticks-wrapper" [ngClass]="options.customTickClass">
         <svg role="presentation" width="100%" height="8" xmlns="http://www.w3.org/2000/svg">
           @for (tick of tickData; track tick) {
             <rect class="range-tick" [attr.x]="tick.x + '%'" y="-10" width="1" height="8"></rect>

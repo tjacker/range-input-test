@@ -1,6 +1,7 @@
 @use 'sass:math';
 @use 'sass:color';
 
+// Default values (Requirement 5.8 - backward compatibility)
 $barHeight: 3px;
 $barBorderRadius: 3px;
 $barBackground: #c2c2cd;
@@ -14,8 +15,19 @@ $handleSizeFirefox: 16px; // border increases handle size to equal value above
 $animationDuration: var(--range-input-animation-duration, 200ms);
 $animationEasing: var(--range-input-animation-easing, ease-out);
 
+// CSS Custom Properties for styling (Requirements 5.5, 5.6, 5.7)
+// These can be overridden by users via CSS or set programmatically via component options
+$handleColor: var(--range-input-handle-color, $handleBackground);
+$handleActiveColor: var(--range-input-handle-active-color, $handleActiveBackground);
+$trackColor: var(--range-input-track-color, $barBackground);
+$progressColor: var(--range-input-progress-color, $handleBackground);
+$handleSizeCustom: var(--range-input-handle-size, #{$handleSize});
+$trackHeightCustom: var(--range-input-track-height, #{$barHeight});
+$tickColor: var(--range-input-tick-color, #dedee4);
+$tickValueColor: var(--range-input-tick-value-color, #343741);
+
 @mixin c-range-input__slider-thumb {
-  background-color: $handleBackground;
+  background-color: $handleColor;
   border-radius: 50%;
   box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.15);
   border: 2px solid rgba(0, 0, 0, 0.25);
@@ -34,8 +46,8 @@ $animationEasing: var(--range-input-animation-easing, ease-out);
 
   position: relative;
   width: 100%;
-  height: $barHeight;
-  background: $barBackground;
+  height: $trackHeightCustom;
+  background: $trackColor;
   border-radius: $barBorderRadius;
   outline: none;
   cursor: pointer;
@@ -104,8 +116,8 @@ $animationEasing: var(--range-input-animation-easing, ease-out);
     appearance: none;
 
     @include c-range-input__slider-thumb();
-    width: $handleSize;
-    height: $handleSize;
+    width: $handleSizeCustom;
+    height: $handleSizeCustom;
   }
 
   // Animate thumb position (Requirements 3.1, 3.7)
@@ -114,15 +126,15 @@ $animationEasing: var(--range-input-animation-easing, ease-out);
   }
 
   &:active::-webkit-slider-thumb {
-    background-color: $handleActiveBackground;
+    background-color: $handleActiveColor;
   }
   &:focus::-webkit-slider-thumb {
-    background-color: $handleActiveBackground;
+    background-color: $handleActiveColor;
   }
   &:focus-visible::-webkit-slider-thumb {
-    background-color: $handleActiveBackground;
+    background-color: $handleActiveColor;
     box-shadow: none;
-    outline: 2px solid $handleBackground;
+    outline: 2px solid $handleColor;
     outline-offset: 1px;
   }
 
@@ -138,15 +150,15 @@ $animationEasing: var(--range-input-animation-easing, ease-out);
   }
 
   &:active::-moz-range-thumb {
-    background-color: $handleActiveBackground;
+    background-color: $handleActiveColor;
   }
   &:focus::-moz-range-thumb {
-    background-color: $handleActiveBackground;
+    background-color: $handleActiveColor;
   }
   &:focus-visible::-moz-range-thumb {
-    background-color: $handleActiveBackground;
+    background-color: $handleActiveColor;
     box-shadow: none;
-    outline: 2px solid $handleBackground;
+    outline: 2px solid $handleColor;
     outline-offset: 1px;
   }
 }
@@ -179,7 +191,7 @@ $animationEasing: var(--range-input-animation-easing, ease-out);
     font-size: 14px;
     font-weight: 700;
     color: #fff;
-    background: $handleBackground;
+    background: $handleColor;
     padding: 2px 4px;
     border-radius: 3px;
     cursor: default;
@@ -203,7 +215,7 @@ $animationEasing: var(--range-input-animation-easing, ease-out);
       margin: auto;
       border-left: 4px solid transparent;
       border-right: 4px solid transparent;
-      border-top: 4px solid $handleBackground;
+      border-top: 4px solid $handleColor;
     }
   }
 
@@ -217,12 +229,12 @@ $animationEasing: var(--range-input-animation-easing, ease-out);
     }
 
     .range-tick {
-      fill: #dedee4;
+      fill: $tickColor;
     }
 
     .range-value {
       font-size: 12px;
-      fill: #343741;
+      fill: $tickValueColor;
       -webkit-user-select: none;
       user-select: none;
       cursor: pointer;

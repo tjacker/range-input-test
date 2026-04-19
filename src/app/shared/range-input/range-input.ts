@@ -190,6 +190,9 @@ export class RangeInputComponent extends InputControl<string, number> implements
       }
     }
 
+    // Set CSS custom properties for styling (Requirements 5.5, 5.6, 5.7)
+    this.applyStylingCustomProperties();
+
     // Initialize tooltip state (Requirements 4.2, 4.7)
     if (this._options.showTooltip === 'always') {
       this.showTooltip('single');
@@ -858,6 +861,36 @@ export class RangeInputComponent extends InputControl<string, number> implements
     }
     // Otherwise use the same formatter as display value
     return this.getDisplayValue(value);
+  }
+
+  /**
+   * Apply CSS custom properties for styling options (Requirements 5.5, 5.6, 5.7)
+   */
+  private applyStylingCustomProperties(): void {
+    // Get the host element
+    const hostElement = this.inputElementRef?.nativeElement?.closest('.c-range-input');
+    if (!hostElement) {
+      return;
+    }
+
+    // Apply handle size if configured (Requirement 5.5)
+    if (this._options.handleSize != null) {
+      this.renderer.setStyle(hostElement, '--range-input-handle-size', `${this._options.handleSize}px`);
+    }
+
+    // Apply track height if configured (Requirement 5.6)
+    if (this._options.trackHeight != null) {
+      this.renderer.setStyle(hostElement, '--range-input-track-height', `${this._options.trackHeight}px`);
+    }
+
+    // Note: Colors are applied via CSS custom properties in SCSS (Requirement 5.7)
+    // Users can override these via CSS:
+    // --range-input-handle-color: Handle color
+    // --range-input-handle-active-color: Handle color when active/focused
+    // --range-input-track-color: Track background color
+    // --range-input-progress-color: Progress bar color
+    // --range-input-tick-color: Tick mark color
+    // --range-input-tick-value-color: Tick value text color
   }
 }
 
