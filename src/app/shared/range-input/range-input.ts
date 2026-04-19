@@ -8,6 +8,7 @@ import {
   Output,
   Renderer2,
   Self,
+  TemplateRef,
   ViewChild,
 } from '@angular/core';
 import { NgControl } from '@angular/forms';
@@ -62,6 +63,19 @@ export class RangeInputComponent extends InputControl<string, number> implements
         showTicks: false,
         tickSteps: 21,
         tickValueSteps: 5,
+        // Range slider defaults
+        enableRangeMode: false,
+        // Keyboard navigation defaults
+        enableKeyboardNavigation: true,
+        largeStepPercentage: 10,
+        // Animation defaults
+        enableAnimations: true,
+        animationDuration: 200,
+        animationEasing: 'ease-out',
+        // Tooltip defaults
+        showTooltip: 'never',
+        tooltipPlacement: 'top',
+        tooltipDelay: 500,
       },
       ...this._options,
       ...value,
@@ -75,12 +89,22 @@ export class RangeInputComponent extends InputControl<string, number> implements
   @Output() public rangeDrop = new EventEmitter<number>();
   @Output() public rangeDrag = new EventEmitter<number>();
 
+  // NEW: Range mode outputs (Requirement 1)
+  @Output() public minValueChange = new EventEmitter<number>();
+  @Output() public maxValueChange = new EventEmitter<number>();
+  @Output() public rangeChange = new EventEmitter<{ min: number; max: number }>();
+
   public displayValue: string;
   public tickData: RangeInputTickData[];
 
   @ViewChild('input') private inputElementRef: ElementRef<HTMLInputElement>;
   @ViewChild('inputDisplayValue')
   private inputDisplayValueElementRef: ElementRef<HTMLSpanElement>;
+
+  // NEW: ViewChild references for dual-handle mode (Requirement 1)
+  @ViewChild('minInput') private minInputElementRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('maxInput') private maxInputElementRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('tooltip') private tooltipElementRef?: ElementRef<HTMLDivElement>;
 
   private _options: RangeInputOptions = {};
   private isChangeEvent = false;
@@ -259,6 +283,62 @@ export class RangeInputOptions {
   public convertValue?: RangeInputConvertFormat;
   public formatDisplayValue?: RangeInputConvertFormat;
   public formatTickValue?: RangeInputConvertFormat;
+
+  // Range slider options (Requirement 1)
+  /** Enable dual-handle mode for selecting min/max ranges */
+  public enableRangeMode? = false;
+  /** Minimum value for dual-handle mode */
+  public minValue?: number;
+  /** Maximum value for dual-handle mode */
+  public maxValue?: number;
+
+  // Keyboard navigation options (Requirement 2)
+  /** Enable keyboard navigation (arrow keys, page up/down, home/end) */
+  public enableKeyboardNavigation? = true;
+  /** Large step percentage for Page Up/Down keys (percentage of range, default 10%) */
+  public largeStepPercentage? = 10;
+
+  // Animation options (Requirement 3)
+  /** Enable CSS transitions for programmatic value changes */
+  public enableAnimations? = true;
+  /** Animation duration in milliseconds */
+  public animationDuration? = 200;
+  /** CSS animation easing function */
+  public animationEasing? = 'ease-out';
+
+  // Tooltip options (Requirement 4)
+  /** Tooltip visibility mode: 'always' | 'onHover' | 'onDrag' | 'never' */
+  public showTooltip?: 'always' | 'onHover' | 'onDrag' | 'never' = 'never';
+  /** Tooltip placement relative to handle: 'top' | 'bottom' | 'left' | 'right' */
+  public tooltipPlacement?: 'top' | 'bottom' | 'left' | 'right' = 'top';
+  /** Delay in milliseconds before hiding tooltip after interaction stops */
+  public tooltipDelay? = 500;
+  /** Custom formatter function for tooltip content */
+  public formatTooltipValue?: RangeInputConvertFormat;
+  /** Custom template for tooltip content */
+  public tooltipTemplate?: TemplateRef<any>;
+
+  // Styling options (Requirement 5)
+  /** Custom CSS class for slider handle */
+  public customHandleClass?: string;
+  /** Custom CSS class for slider track */
+  public customTrackClass?: string;
+  /** Custom CSS class for progress bar */
+  public customProgressClass?: string;
+  /** Custom CSS class for tick marks */
+  public customTickClass?: string;
+  /** Handle size in pixels */
+  public handleSize?: number;
+  /** Track height in pixels */
+  public trackHeight?: number;
+
+  // Accessibility options (Requirement 6)
+  /** Custom formatter for aria-valuetext attribute */
+  public ariaValueTextFormatter?: (value: number) => string;
+  /** ARIA label for minimum handle in dual-handle mode */
+  public minHandleAriaLabel?: string;
+  /** ARIA label for maximum handle in dual-handle mode */
+  public maxHandleAriaLabel?: string;
 }
 
 export interface RangeInputTickData {
@@ -266,3 +346,30 @@ export interface RangeInputTickData {
   value: string;
   x: number;
 }
+
+/**
+ * iOS Compatibility Notes (Requirement 7)
+ *
+ * iOS Safari has specific limitations with native range inputs that must be considered:
+ *
+ * 1. **Two-tap interaction pattern**: iOS requires tapping the track to focus, then dragging.
+ *    This is native behavior that cannot be overridden programmatically.
+ *
+ * 2. **Drag must start on thumb**: Users cannot initiate drag from the track itself on iOS,
+ *    only from the thumb element. This is a native iOS Safari limitation.
+ *
+ * 3. **Scroll vs drag conflict**: Touch gestures in scrollable containers may trigger scrolling
+ *    instead of dragging. Use `touch-action: none` on the slider container to prevent this.
+ *
+ * 4. **-webkit-appearance considerations**: Removing all webkit appearance styling with
+ *    `-webkit-appearance: none` can disable touch handlers entirely. Preserve minimal
+ *    webkit-appearance properties necessary for iOS touch handling.
+ *
+ * 5. **Step attribute limitation**: Non-zero step values may disable track-dragging outside
+ *    the thumb on iOS Safari.
+ *
+ * 6. **Minimum iOS version**: iOS 15+ is required for full HTML5 Drag and Drop API support.
+ *
+ * 7. **Fallback touch handlers**: If native range input drag behavior fails on iOS, fallback
+ *    touch event handlers may be required.
+ */
