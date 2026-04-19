@@ -10,6 +10,7 @@
     "watch": "nx build --watch --configuration development",
     "test": "nx test"
   },
+  "type": "module",
   "private": true,
   "dependencies": {
     "@angular/animations": "^21.2.9",
@@ -44,6 +45,7 @@
     "angular-cli-ghpages": "^3.0.2",
     "angular-eslint": "^21.3.1",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
     "jasmine-core": "~4.5.0",
     "jsdom": "^29.0.2",
     "nx": "22.6.5",

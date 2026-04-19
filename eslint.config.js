@@ -1,14 +1,18 @@
-const { defineConfig } = require('eslint/config');
-const tseslint = require('typescript-eslint');
-const angular = require('angular-eslint');
+import { defineConfig } from 'eslint/config';
+import tseslint from 'typescript-eslint';
+import angular from 'angular-eslint';
+import importPlugin from 'eslint-plugin-import';
 
-module.exports = defineConfig([
+export default defineConfig([
   {
     ignores: ['**/dist', '**/.nx', '**/node_modules'],
   },
   {
     files: ['**/*.ts'],
     extends: [...tseslint.configs.recommended, ...angular.configs.tsRecommended],
+    plugins: {
+      import: importPlugin,
+    },
     processor: angular.processInlineTemplates,
     rules: {
       '@angular-eslint/directive-selector': ['error', { type: 'attribute', prefix: 'mg', style: 'camelCase' }],
@@ -16,6 +20,14 @@ module.exports = defineConfig([
       '@angular-eslint/prefer-standalone': 'off',
       '@angular-eslint/prefer-inject': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+      'import/order': [
+        'error',
+        {
+          'newlines-between': 'never',
+          alphabetize: { order: 'asc', caseInsensitive: true },
+        },
+      ],
+      'sort-imports': ['error', { ignoreDeclarationSort: true, ignoreMemberSort: false }],
     },
   },
   {

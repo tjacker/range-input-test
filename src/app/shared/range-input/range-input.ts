@@ -1,8 +1,3 @@
-import { NgControl } from '@angular/forms';
-import { InputControl } from '../input-control';
-import { ValueConverter } from '../service/value-converter';
-import { RangeInputNumberFormatConverter } from './range-input-number-format-converter';
-import { debounceTime, distinctUntilChanged, EMPTY, filter, iif, of, Subject, switchMap, takeUntil } from 'rxjs';
 import {
   Component,
   ElementRef,
@@ -15,6 +10,11 @@ import {
   Self,
   ViewChild,
 } from '@angular/core';
+import { NgControl } from '@angular/forms';
+import { EMPTY, Subject, debounceTime, distinctUntilChanged, filter, iif, of, switchMap, takeUntil } from 'rxjs';
+import { InputControl } from '../input-control';
+import { ValueConverter } from '../service/value-converter';
+import { RangeInputNumberFormatConverter } from './range-input-number-format-converter';
 
 let index = 0;
 
