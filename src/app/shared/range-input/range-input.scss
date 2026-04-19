@@ -10,6 +10,10 @@ $handleActiveBackground: color.adjust($handleBackground, $lightness: -5%);
 $handleSize: 20px;
 $handleSizeFirefox: 16px; // border increases handle size to equal value above
 
+// Animation variables (Requirement 3)
+$animationDuration: var(--range-input-animation-duration, 200ms);
+$animationEasing: var(--range-input-animation-easing, ease-out);
+
 @mixin c-range-input__slider-thumb {
   background-color: $handleBackground;
   border-radius: 50%;
@@ -36,6 +40,12 @@ $handleSizeFirefox: 16px; // border increases handle size to equal value above
   outline: none;
   cursor: pointer;
   z-index: 2;
+
+  // Animation transitions (Requirements 3.1, 3.2, 3.3, 3.4, 3.7)
+  // Applied when .animate class is present
+  &.animate {
+    transition: background $animationDuration $animationEasing;
+  }
 
   &-wrapper {
     height: 20px;
@@ -97,6 +107,12 @@ $handleSizeFirefox: 16px; // border increases handle size to equal value above
     width: $handleSize;
     height: $handleSize;
   }
+
+  // Animate thumb position (Requirements 3.1, 3.7)
+  &.animate::-webkit-slider-thumb {
+    transition: transform $animationDuration $animationEasing;
+  }
+
   &:active::-webkit-slider-thumb {
     background-color: $handleActiveBackground;
   }
@@ -115,6 +131,12 @@ $handleSizeFirefox: 16px; // border increases handle size to equal value above
     width: $handleSizeFirefox;
     height: $handleSizeFirefox;
   }
+
+  // Animate thumb position for Firefox (Requirements 3.1, 3.7)
+  &.animate::-moz-range-thumb {
+    transition: transform $animationDuration $animationEasing;
+  }
+
   &:active::-moz-range-thumb {
     background-color: $handleActiveBackground;
   }
@@ -163,6 +185,11 @@ $handleSizeFirefox: 16px; // border increases handle size to equal value above
     cursor: default;
     transform: translateX(-50%);
     z-index: 1;
+
+    // Animate display value position (Requirements 3.3, 3.7)
+    &.animate {
+      transition: left $animationDuration $animationEasing;
+    }
 
     &:after {
       content: '';

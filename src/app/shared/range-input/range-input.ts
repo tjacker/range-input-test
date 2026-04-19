@@ -100,6 +100,9 @@ export class RangeInputComponent extends InputControl<string, number> implements
   // NEW: Internal state for range slider mode (public for template access)
   public rangeSliderState?: RangeSliderState;
 
+  // NEW: Animation state (Requirements 3.5, 3.6)
+  private animationInProgress = false;
+
   @ViewChild('input') private inputElementRef: ElementRef<HTMLInputElement>;
   @ViewChild('inputDisplayValue')
   private inputDisplayValueElementRef: ElementRef<HTMLSpanElement>;
@@ -130,7 +133,13 @@ export class RangeInputComponent extends InputControl<string, number> implements
         takeUntil(this.componentDestroyed$),
         filter((): boolean => this.isChangeEvent === false && this.isInputEvent === false),
       )
-      .subscribe(this.updateProgressDisplay);
+      .subscribe((value) => {
+        // Enable animations for programmatic changes (Requirements 3.1, 3.2, 3.3)
+        if (this._options.enableAnimations) {
+          this.enableAnimations();
+        }
+        this.updateProgressDisplay(value);
+      });
 
     this.registerAfterOnChange(this.updateAfterOnChange);
   }
@@ -144,6 +153,21 @@ export class RangeInputComponent extends InputControl<string, number> implements
     // Initialize range slider state if dual-handle mode is enabled
     if (this._options.enableRangeMode) {
       this.initializeRangeSliderState();
+    }
+
+    // Set CSS custom properties for animations (Requirements 3.4, 3.7)
+    if (this._options.enableAnimations) {
+      const duration = this._options.animationDuration ?? 200;
+      const easing = this._options.animationEasing ?? 'ease-out';
+
+      // Apply to the component's host element
+      if (this.inputElementRef?.nativeElement) {
+        const hostElement = this.inputElementRef.nativeElement.closest('.c-range-input');
+        if (hostElement) {
+          this.renderer.setStyle(hostElement, '--range-input-animation-duration', `${duration}ms`);
+          this.renderer.setStyle(hostElement, '--range-input-animation-easing', easing);
+        }
+      }
     }
 
     if (this._options.showTicks) {
@@ -198,11 +222,23 @@ export class RangeInputComponent extends InputControl<string, number> implements
     console.log('CHANGE');
     this.isChangeEvent = true;
     this.onChange((event.target as HTMLInputElement).value);
+
+    // Re-enable animations after drag ends (Requirement 3.6)
+    // Use setTimeout to ensure the change is applied first
+    setTimeout(() => {
+      if (this._options.enableAnimations) {
+        this.enableAnimations();
+      }
+    }, 0);
   }
 
   protected onInputEvent(event: Event): void {
     this.isInputEvent = true;
     console.log('INPUT');
+
+    // Disable animations during user drag (Requirement 3.6)
+    this.disableAnimations();
+
     this.onChange((event.target as HTMLInputElement).value);
   }
 
@@ -233,6 +269,13 @@ export class RangeInputComponent extends InputControl<string, number> implements
     this.rangeSliderState.isDraggingMin = false;
     const newValue = parseFloat((event.target as HTMLInputElement).value);
     this.updateMinValue(newValue, true);
+
+    // Re-enable animations after drag ends (Requirement 3.6)
+    setTimeout(() => {
+      if (this._options.enableAnimations) {
+        this.enableAnimations();
+      }
+    }, 0);
   }
 
   protected onMinInputEvent(event: Event): void {
@@ -241,6 +284,10 @@ export class RangeInputComponent extends InputControl<string, number> implements
       return;
     }
     this.rangeSliderState.isDraggingMin = true;
+
+    // Disable animations during user drag (Requirement 3.6)
+    this.disableAnimations();
+
     const newValue = parseFloat((event.target as HTMLInputElement).value);
     this.updateMinValue(newValue, false);
   }
@@ -253,6 +300,13 @@ export class RangeInputComponent extends InputControl<string, number> implements
     this.rangeSliderState.isDraggingMax = false;
     const newValue = parseFloat((event.target as HTMLInputElement).value);
     this.updateMaxValue(newValue, true);
+
+    // Re-enable animations after drag ends (Requirement 3.6)
+    setTimeout(() => {
+      if (this._options.enableAnimations) {
+        this.enableAnimations();
+      }
+    }, 0);
   }
 
   protected onMaxInputEvent(event: Event): void {
@@ -261,6 +315,10 @@ export class RangeInputComponent extends InputControl<string, number> implements
       return;
     }
     this.rangeSliderState.isDraggingMax = true;
+
+    // Disable animations during user drag (Requirement 3.6)
+    this.disableAnimations();
+
     const newValue = parseFloat((event.target as HTMLInputElement).value);
     this.updateMaxValue(newValue, false);
   }
@@ -372,6 +430,10 @@ export class RangeInputComponent extends InputControl<string, number> implements
   protected writeValueToView(value: string): void {
     console.log('writeValueToView', value);
     if (this.inputElementRef?.nativeElement != null) {
+      // Enable animations for programmatic value changes (Requirements 3.1, 3.2, 3.3)
+      if (this._options.enableAnimations && !this.isInputEvent && !this.isChangeEvent) {
+        this.enableAnimations();
+      }
       this.renderer.setProperty(this.inputElementRef.nativeElement, 'value', value);
     }
   }
@@ -438,6 +500,62 @@ export class RangeInputComponent extends InputControl<string, number> implements
       isDraggingMax: false,
       focusedHandle: null,
     };
+  }
+
+  /**
+   * Enable animations by adding CSS transition classes (Requirements 3.5, 3.6)
+   */
+  private enableAnimations(): void {
+    if (!this._options.enableAnimations) {
+      return;
+    }
+
+    this.animationInProgress = true;
+
+    // Apply animation class to input elements
+    if (this._options.enableRangeMode) {
+      if (this.minInputElementRef?.nativeElement) {
+        this.renderer.addClass(this.minInputElementRef.nativeElement, 'animate');
+      }
+      if (this.maxInputElementRef?.nativeElement) {
+        this.renderer.addClass(this.maxInputElementRef.nativeElement, 'animate');
+      }
+    } else {
+      if (this.inputElementRef?.nativeElement) {
+        this.renderer.addClass(this.inputElementRef.nativeElement, 'animate');
+      }
+    }
+
+    // Apply animation class to display value
+    if (this.inputDisplayValueElementRef?.nativeElement) {
+      this.renderer.addClass(this.inputDisplayValueElementRef.nativeElement, 'animate');
+    }
+  }
+
+  /**
+   * Disable animations by removing CSS transition classes (Requirements 3.5, 3.6)
+   */
+  private disableAnimations(): void {
+    this.animationInProgress = false;
+
+    // Remove animation class from input elements
+    if (this._options.enableRangeMode) {
+      if (this.minInputElementRef?.nativeElement) {
+        this.renderer.removeClass(this.minInputElementRef.nativeElement, 'animate');
+      }
+      if (this.maxInputElementRef?.nativeElement) {
+        this.renderer.removeClass(this.maxInputElementRef.nativeElement, 'animate');
+      }
+    } else {
+      if (this.inputElementRef?.nativeElement) {
+        this.renderer.removeClass(this.inputElementRef.nativeElement, 'animate');
+      }
+    }
+
+    // Remove animation class from display value
+    if (this.inputDisplayValueElementRef?.nativeElement) {
+      this.renderer.removeClass(this.inputDisplayValueElementRef.nativeElement, 'animate');
+    }
   }
 
   /**
