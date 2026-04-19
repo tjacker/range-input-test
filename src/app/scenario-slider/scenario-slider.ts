@@ -37,6 +37,8 @@ export class ScenarioSliderComponent implements OnInit {
     hideDisplayValue: false,
     showProgressBar: true,
     showTicks: true,
+    showTooltip: 'onHover' as const,
+    tooltipPlacement: 'top' as const,
   };
   public faLocationPin = faLocationPin;
   public status = 'Initial';

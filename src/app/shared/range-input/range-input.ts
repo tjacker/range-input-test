@@ -100,6 +100,19 @@ export class RangeInputComponent extends InputControl<string, number> implements
   // NEW: Internal state for range slider mode (public for template access)
   public rangeSliderState?: RangeSliderState;
 
+  // NEW: Tooltip state (Requirements 4.1, 4.5)
+  public tooltipState: TooltipState = {
+    singleVisible: false,
+    singleContent: '',
+    singlePosition: 0,
+    minVisible: false,
+    minContent: '',
+    minPosition: 0,
+    maxVisible: false,
+    maxContent: '',
+    maxPosition: 0,
+  };
+
   // NEW: Animation state (Requirements 3.5, 3.6)
   private animationInProgress = false;
 
@@ -110,7 +123,11 @@ export class RangeInputComponent extends InputControl<string, number> implements
   // NEW: ViewChild references for dual-handle mode (Requirement 1)
   @ViewChild('minInput') private minInputElementRef?: ElementRef<HTMLInputElement>;
   @ViewChild('maxInput') private maxInputElementRef?: ElementRef<HTMLInputElement>;
+
+  // NEW: ViewChild references for tooltips (Requirement 4)
   @ViewChild('tooltip') private tooltipElementRef?: ElementRef<HTMLDivElement>;
+  @ViewChild('minTooltip') private minTooltipElementRef?: ElementRef<HTMLDivElement>;
+  @ViewChild('maxTooltip') private maxTooltipElementRef?: ElementRef<HTMLDivElement>;
 
   private _options: RangeInputOptions = {};
   private isChangeEvent = false;
@@ -118,6 +135,9 @@ export class RangeInputComponent extends InputControl<string, number> implements
 
   private readonly componentDestroyed$ = new Subject<boolean>();
   private readonly updateOnDragOrDrop$ = new Subject<number>();
+
+  // NEW: RxJS subjects for tooltip hide delay (Requirement 4.4, 4.5)
+  private readonly tooltipHide$ = new Subject<'single' | 'min' | 'max'>();
 
   public constructor(
     @Self() public model: NgControl,
@@ -169,6 +189,25 @@ export class RangeInputComponent extends InputControl<string, number> implements
         }
       }
     }
+
+    // Initialize tooltip state (Requirements 4.2, 4.7)
+    if (this._options.showTooltip === 'always') {
+      this.showTooltip('single');
+      if (this._options.enableRangeMode) {
+        this.showTooltip('min');
+        this.showTooltip('max');
+      }
+    }
+
+    // Setup tooltip hide delay (Requirements 4.4, 4.5)
+    this.tooltipHide$
+      .pipe(takeUntil(this.componentDestroyed$), debounceTime(this._options.tooltipDelay ?? 500))
+      .subscribe((handle: 'single' | 'min' | 'max') => {
+        // Only hide if not in 'always' mode
+        if (this._options.showTooltip !== 'always') {
+          this.hideTooltip(handle);
+        }
+      });
 
     if (this._options.showTicks) {
       this.generateTickData();
@@ -230,6 +269,11 @@ export class RangeInputComponent extends InputControl<string, number> implements
         this.enableAnimations();
       }
     }, 0);
+
+    // Hide tooltip after drag ends (Requirement 4.4)
+    if (this._options.showTooltip !== 'always' && this._options.showTooltip !== 'onHover') {
+      this.tooltipHide$.next('single');
+    }
   }
 
   protected onInputEvent(event: Event): void {
@@ -238,6 +282,11 @@ export class RangeInputComponent extends InputControl<string, number> implements
 
     // Disable animations during user drag (Requirement 3.6)
     this.disableAnimations();
+
+    // Show tooltip during drag (Requirement 4.3)
+    if (this._options.showTooltip === 'onDrag' || this._options.showTooltip === 'always') {
+      this.showTooltip('single');
+    }
 
     this.onChange((event.target as HTMLInputElement).value);
   }
@@ -276,6 +325,11 @@ export class RangeInputComponent extends InputControl<string, number> implements
         this.enableAnimations();
       }
     }, 0);
+
+    // Hide tooltip after drag ends (Requirement 4.4)
+    if (this._options.showTooltip !== 'always' && this._options.showTooltip !== 'onHover') {
+      this.tooltipHide$.next('min');
+    }
   }
 
   protected onMinInputEvent(event: Event): void {
@@ -287,6 +341,11 @@ export class RangeInputComponent extends InputControl<string, number> implements
 
     // Disable animations during user drag (Requirement 3.6)
     this.disableAnimations();
+
+    // Show tooltip during drag (Requirement 4.3)
+    if (this._options.showTooltip === 'onDrag' || this._options.showTooltip === 'always') {
+      this.showTooltip('min');
+    }
 
     const newValue = parseFloat((event.target as HTMLInputElement).value);
     this.updateMinValue(newValue, false);
@@ -307,6 +366,11 @@ export class RangeInputComponent extends InputControl<string, number> implements
         this.enableAnimations();
       }
     }, 0);
+
+    // Hide tooltip after drag ends (Requirement 4.4)
+    if (this._options.showTooltip !== 'always' && this._options.showTooltip !== 'onHover') {
+      this.tooltipHide$.next('max');
+    }
   }
 
   protected onMaxInputEvent(event: Event): void {
@@ -319,6 +383,11 @@ export class RangeInputComponent extends InputControl<string, number> implements
     // Disable animations during user drag (Requirement 3.6)
     this.disableAnimations();
 
+    // Show tooltip during drag (Requirement 4.3)
+    if (this._options.showTooltip === 'onDrag' || this._options.showTooltip === 'always') {
+      this.showTooltip('max');
+    }
+
     const newValue = parseFloat((event.target as HTMLInputElement).value);
     this.updateMaxValue(newValue, false);
   }
@@ -329,6 +398,31 @@ export class RangeInputComponent extends InputControl<string, number> implements
     }
     this.isChangeEvent = true;
     this.onChange(value);
+  }
+
+  /**
+   * Handle mouse enter on slider handle (Requirement 4.2)
+   */
+  protected onHandleMouseEnter(handle: 'single' | 'min' | 'max'): void {
+    // Show tooltip on hover if enabled (Requirement 4.2)
+    if (this._options.showTooltip === 'onHover' || this._options.showTooltip === 'always') {
+      this.showTooltip(handle);
+    }
+  }
+
+  /**
+   * Handle mouse leave on slider handle (Requirement 4.4)
+   */
+  protected onHandleMouseLeave(handle: 'single' | 'min' | 'max'): void {
+    // Hide tooltip after delay when not dragging (Requirement 4.4)
+    const isDragging =
+      (handle === 'single' && this.isInputEvent) ||
+      (handle === 'min' && this.rangeSliderState?.isDraggingMin) ||
+      (handle === 'max' && this.rangeSliderState?.isDraggingMax);
+
+    if (!isDragging && this._options.showTooltip !== 'always') {
+      this.tooltipHide$.next(handle);
+    }
   }
 
   /**
@@ -464,6 +558,9 @@ export class RangeInputComponent extends InputControl<string, number> implements
         `linear-gradient(to right, #005F9E ${sliderProgress}%, #C2C2CD ${sliderProgress}%)`,
       );
     }
+
+    // Update tooltip position and content (Requirements 4.5, 4.8)
+    this.updateTooltipPosition('single', value);
   }
 
   private generateTickData(): void {
@@ -684,6 +781,83 @@ export class RangeInputComponent extends InputControl<string, number> implements
         this.renderer.setStyle(this.maxInputElementRef.nativeElement, 'background', gradient);
       }
     }
+
+    // Update tooltip positions and content (Requirements 4.5, 4.6, 4.8)
+    this.updateTooltipPosition('min', minValue);
+    this.updateTooltipPosition('max', maxValue);
+  }
+
+  /**
+   * Show tooltip for specified handle (Requirements 4.2, 4.3, 4.7)
+   */
+  private showTooltip(handle: 'single' | 'min' | 'max'): void {
+    if (!this._options.showTooltip || this._options.showTooltip === 'never') {
+      return;
+    }
+
+    // Get current value for the handle
+    let value: number;
+    if (handle === 'single') {
+      value = this.model.value ?? this.min;
+      this.tooltipState.singleVisible = true;
+      this.updateTooltipPosition('single', value);
+    } else if (handle === 'min') {
+      value = this.rangeSliderState?.minValue ?? this.min;
+      this.tooltipState.minVisible = true;
+      this.updateTooltipPosition('min', value);
+    } else {
+      value = this.rangeSliderState?.maxValue ?? this.max;
+      this.tooltipState.maxVisible = true;
+      this.updateTooltipPosition('max', value);
+    }
+  }
+
+  /**
+   * Hide tooltip for specified handle (Requirement 4.4)
+   */
+  private hideTooltip(handle: 'single' | 'min' | 'max'): void {
+    if (handle === 'single') {
+      this.tooltipState.singleVisible = false;
+    } else if (handle === 'min') {
+      this.tooltipState.minVisible = false;
+    } else {
+      this.tooltipState.maxVisible = false;
+    }
+  }
+
+  /**
+   * Update tooltip position and content (Requirements 4.5, 4.6, 4.8)
+   */
+  private updateTooltipPosition(handle: 'single' | 'min' | 'max', value: number): void {
+    // Calculate position as percentage
+    const position = ((value - this.min) / (this.max - this.min)) * 100;
+
+    // Get formatted content (Requirement 4.8)
+    const content = this.getTooltipContent(value);
+
+    // Update tooltip state
+    if (handle === 'single') {
+      this.tooltipState.singlePosition = position;
+      this.tooltipState.singleContent = content;
+    } else if (handle === 'min') {
+      this.tooltipState.minPosition = position;
+      this.tooltipState.minContent = content;
+    } else {
+      this.tooltipState.maxPosition = position;
+      this.tooltipState.maxContent = content;
+    }
+  }
+
+  /**
+   * Get formatted tooltip content (Requirement 4.8)
+   */
+  private getTooltipContent(value: number): string {
+    // Use custom formatter if provided (Requirement 4.8)
+    if (typeof this._options.formatTooltipValue === 'function') {
+      return this._options.formatTooltipValue(value);
+    }
+    // Otherwise use the same formatter as display value
+    return this.getDisplayValue(value);
   }
 }
 
@@ -776,6 +950,30 @@ export interface RangeSliderState {
   isDraggingMax: boolean;
   /** Which handle currently has focus */
   focusedHandle: 'min' | 'max' | null;
+}
+
+/**
+ * Internal state for tooltip display (Requirement 4)
+ */
+export interface TooltipState {
+  /** Whether single-handle tooltip is visible */
+  singleVisible: boolean;
+  /** Content for single-handle tooltip */
+  singleContent: string;
+  /** Position (percentage) for single-handle tooltip */
+  singlePosition: number;
+  /** Whether min handle tooltip is visible */
+  minVisible: boolean;
+  /** Content for min handle tooltip */
+  minContent: string;
+  /** Position (percentage) for min handle tooltip */
+  minPosition: number;
+  /** Whether max handle tooltip is visible */
+  maxVisible: boolean;
+  /** Content for max handle tooltip */
+  maxContent: string;
+  /** Position (percentage) for max handle tooltip */
+  maxPosition: number;
 }
 
 /**

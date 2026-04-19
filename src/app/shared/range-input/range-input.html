@@ -42,7 +42,9 @@
           (mouseup)="onMouseupEvent($event)"
           (touchend)="onMouseupEvent($event)"
           (focus)="onMinFocusEvent()"
-          (keydown)="handleKeyboardEvent($event, 'min')" />
+          (keydown)="handleKeyboardEvent($event, 'min')"
+          (mouseenter)="onHandleMouseEnter('min')"
+          (mouseleave)="onHandleMouseLeave('min')" />
         <input
           #maxInput
           class="c-range-input__field c-range-input__field--max"
@@ -64,7 +66,9 @@
           (mouseup)="onMouseupEvent($event)"
           (touchend)="onMouseupEvent($event)"
           (focus)="onMaxFocusEvent()"
-          (keydown)="handleKeyboardEvent($event, 'max')" />
+          (keydown)="handleKeyboardEvent($event, 'max')"
+          (mouseenter)="onHandleMouseEnter('max')"
+          (mouseleave)="onHandleMouseLeave('max')" />
       } @else {
         <!-- Single-handle mode: Original single input element -->
         <input
@@ -86,7 +90,9 @@
           (input)="onInputEvent($event)"
           (mouseup)="onMouseupEvent($event)"
           (touchend)="onMouseupEvent($event)"
-          (keydown)="handleKeyboardEvent($event, 'single')" />
+          (keydown)="handleKeyboardEvent($event, 'single')"
+          (mouseenter)="onHandleMouseEnter('single')"
+          (mouseleave)="onHandleMouseLeave('single')" />
       }
     </div>
 
@@ -124,5 +130,64 @@
     <div class="c-range-input__overlay-wrapper">
       <ng-content></ng-content>
     </div>
+
+    <!-- Tooltip elements (Requirements 4.1, 4.5) -->
+    @if (options.showTooltip && options.showTooltip !== 'never') {
+      @if (options.enableRangeMode) {
+        <!-- Dual-handle mode: Separate tooltips for min and max handles -->
+        <div
+          #minTooltip
+          class="c-range-input__tooltip"
+          [class.c-range-input__tooltip--visible]="tooltipState.minVisible"
+          [class.c-range-input__tooltip--top]="options.tooltipPlacement === 'top'"
+          [class.c-range-input__tooltip--bottom]="options.tooltipPlacement === 'bottom'"
+          [class.c-range-input__tooltip--left]="options.tooltipPlacement === 'left'"
+          [class.c-range-input__tooltip--right]="options.tooltipPlacement === 'right'"
+          [style.left.%]="tooltipState.minPosition">
+          @if (options.tooltipTemplate) {
+            <ng-container
+              *ngTemplateOutlet="options.tooltipTemplate; context: { $implicit: rangeSliderState?.minValue ?? min }">
+            </ng-container>
+          } @else {
+            <span>{{ tooltipState.minContent }}</span>
+          }
+        </div>
+        <div
+          #maxTooltip
+          class="c-range-input__tooltip"
+          [class.c-range-input__tooltip--visible]="tooltipState.maxVisible"
+          [class.c-range-input__tooltip--top]="options.tooltipPlacement === 'top'"
+          [class.c-range-input__tooltip--bottom]="options.tooltipPlacement === 'bottom'"
+          [class.c-range-input__tooltip--left]="options.tooltipPlacement === 'left'"
+          [class.c-range-input__tooltip--right]="options.tooltipPlacement === 'right'"
+          [style.left.%]="tooltipState.maxPosition">
+          @if (options.tooltipTemplate) {
+            <ng-container
+              *ngTemplateOutlet="options.tooltipTemplate; context: { $implicit: rangeSliderState?.maxValue ?? max }">
+            </ng-container>
+          } @else {
+            <span>{{ tooltipState.maxContent }}</span>
+          }
+        </div>
+      } @else {
+        <!-- Single-handle mode: Single tooltip -->
+        <div
+          #tooltip
+          class="c-range-input__tooltip"
+          [class.c-range-input__tooltip--visible]="tooltipState.singleVisible"
+          [class.c-range-input__tooltip--top]="options.tooltipPlacement === 'top'"
+          [class.c-range-input__tooltip--bottom]="options.tooltipPlacement === 'bottom'"
+          [class.c-range-input__tooltip--left]="options.tooltipPlacement === 'left'"
+          [class.c-range-input__tooltip--right]="options.tooltipPlacement === 'right'"
+          [style.left.%]="tooltipState.singlePosition">
+          @if (options.tooltipTemplate) {
+            <ng-container *ngTemplateOutlet="options.tooltipTemplate; context: { $implicit: model.value ?? min }">
+            </ng-container>
+          } @else {
+            <span>{{ tooltipState.singleContent }}</span>
+          }
+        </div>
+      }
+    }
   </div>
 </div>
