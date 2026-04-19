@@ -39,6 +39,45 @@ $handleSizeFirefox: 16px; // border increases handle size to equal value above
 
   &-wrapper {
     height: 20px;
+    position: relative; // For absolute positioning of dual handles
+  }
+
+  // Dual-handle mode specific styles (Requirement 1.6)
+  .range-mode & {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none; // Disable pointer events on track, enable on thumb
+
+    // Enable pointer events only on the thumb
+    &::-webkit-slider-thumb {
+      pointer-events: auto;
+    }
+    &::-moz-range-thumb {
+      pointer-events: auto;
+    }
+
+    // Min handle should be below max handle when overlapping
+    &--min {
+      z-index: 3;
+    }
+
+    // Max handle should be above min handle when overlapping
+    &--max {
+      z-index: 4;
+    }
+
+    // When handles are at the same position, ensure both are clickable
+    // by giving the focused/active handle higher z-index
+    &--min:focus,
+    &--min:active {
+      z-index: 5;
+    }
+
+    &--max:focus,
+    &--max:active {
+      z-index: 5;
+    }
   }
 
   // Track adjustments for increasing clicking area.

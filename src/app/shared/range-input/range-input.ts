@@ -97,6 +97,9 @@ export class RangeInputComponent extends InputControl<string, number> implements
   public displayValue: string;
   public tickData: RangeInputTickData[];
 
+  // NEW: Internal state for range slider mode (public for template access)
+  public rangeSliderState?: RangeSliderState;
+
   @ViewChild('input') private inputElementRef: ElementRef<HTMLInputElement>;
   @ViewChild('inputDisplayValue')
   private inputDisplayValueElementRef: ElementRef<HTMLSpanElement>;
@@ -138,6 +141,11 @@ export class RangeInputComponent extends InputControl<string, number> implements
   };
 
   public ngOnInit(): void {
+    // Initialize range slider state if dual-handle mode is enabled
+    if (this._options.enableRangeMode) {
+      this.initializeRangeSliderState();
+    }
+
     if (this._options.showTicks) {
       this.generateTickData();
     }
@@ -205,6 +213,58 @@ export class RangeInputComponent extends InputControl<string, number> implements
     }
   }
 
+  protected onMinFocusEvent(): void {
+    if (this.rangeSliderState) {
+      this.rangeSliderState.focusedHandle = 'min';
+    }
+  }
+
+  protected onMaxFocusEvent(): void {
+    if (this.rangeSliderState) {
+      this.rangeSliderState.focusedHandle = 'max';
+    }
+  }
+
+  protected onMinChangeEvent(event: Event): void {
+    console.log('MIN CHANGE');
+    if (!this.rangeSliderState) {
+      return;
+    }
+    this.rangeSliderState.isDraggingMin = false;
+    const newValue = parseFloat((event.target as HTMLInputElement).value);
+    this.updateMinValue(newValue, true);
+  }
+
+  protected onMinInputEvent(event: Event): void {
+    console.log('MIN INPUT');
+    if (!this.rangeSliderState) {
+      return;
+    }
+    this.rangeSliderState.isDraggingMin = true;
+    const newValue = parseFloat((event.target as HTMLInputElement).value);
+    this.updateMinValue(newValue, false);
+  }
+
+  protected onMaxChangeEvent(event: Event): void {
+    console.log('MAX CHANGE');
+    if (!this.rangeSliderState) {
+      return;
+    }
+    this.rangeSliderState.isDraggingMax = false;
+    const newValue = parseFloat((event.target as HTMLInputElement).value);
+    this.updateMaxValue(newValue, true);
+  }
+
+  protected onMaxInputEvent(event: Event): void {
+    console.log('MAX INPUT');
+    if (!this.rangeSliderState) {
+      return;
+    }
+    this.rangeSliderState.isDraggingMax = true;
+    const newValue = parseFloat((event.target as HTMLInputElement).value);
+    this.updateMaxValue(newValue, false);
+  }
+
   protected onTickValueClick(value: string): void {
     if (this.inputElementRef.nativeElement.value === value) {
       return;
@@ -269,6 +329,147 @@ export class RangeInputComponent extends InputControl<string, number> implements
       return this._options.formatTickValue(value);
     }
     return this.valueConverter.toView(value, this.displayFormat);
+  }
+
+  /**
+   * Initialize range slider state for dual-handle mode
+   */
+  private initializeRangeSliderState(): void {
+    this.rangeSliderState = {
+      minValue: this._options.minValue ?? this.min,
+      maxValue: this._options.maxValue ?? this.max,
+      isDraggingMin: false,
+      isDraggingMax: false,
+      focusedHandle: null,
+    };
+  }
+
+  /**
+   * Update minimum value with constraint validation (Requirements 1.3, 1.4)
+   * Ensures min never exceeds max
+   */
+  private updateMinValue(newValue: number, isChangeEvent: boolean): void {
+    if (!this.rangeSliderState) {
+      return;
+    }
+
+    // Constraint: min must not exceed max (Requirement 1.3)
+    const constrainedValue = Math.min(newValue, this.rangeSliderState.maxValue);
+
+    // Update state
+    this.rangeSliderState.minValue = constrainedValue;
+
+    // Update the input element to reflect constrained value
+    if (this.minInputElementRef?.nativeElement) {
+      this.renderer.setProperty(this.minInputElementRef.nativeElement, 'value', constrainedValue.toString());
+    }
+
+    // Emit events (handled in subtask 2.4)
+    this.emitRangeEvents(isChangeEvent);
+
+    // Update progress bar display (handled in subtask 2.6)
+    this.updateRangeProgressDisplay();
+  }
+
+  /**
+   * Update maximum value with constraint validation (Requirements 1.3, 1.4)
+   * Ensures max never goes below min
+   */
+  private updateMaxValue(newValue: number, isChangeEvent: boolean): void {
+    if (!this.rangeSliderState) {
+      return;
+    }
+
+    // Constraint: max must not go below min (Requirement 1.4)
+    const constrainedValue = Math.max(newValue, this.rangeSliderState.minValue);
+
+    // Update state
+    this.rangeSliderState.maxValue = constrainedValue;
+
+    // Update the input element to reflect constrained value
+    if (this.maxInputElementRef?.nativeElement) {
+      this.renderer.setProperty(this.maxInputElementRef.nativeElement, 'value', constrainedValue.toString());
+    }
+
+    // Emit events (handled in subtask 2.4)
+    this.emitRangeEvents(isChangeEvent);
+
+    // Update progress bar display (handled in subtask 2.6)
+    this.updateRangeProgressDisplay();
+  }
+
+  /**
+   * Emit range change events (Requirement 1.5)
+   */
+  private emitRangeEvents(isChangeEvent: boolean): void {
+    if (!this.rangeSliderState) {
+      return;
+    }
+
+    const { minValue, maxValue } = this.rangeSliderState;
+
+    // Emit separate events for min and max value changes
+    this.minValueChange.emit(minValue);
+    this.maxValueChange.emit(maxValue);
+
+    // Emit combined range change event
+    this.rangeChange.emit({ min: minValue, max: maxValue });
+
+    // Also emit the existing rangeDrag/rangeDrop events for backward compatibility
+    // Use the average of min and max as the single value
+    const averageValue = (minValue + maxValue) / 2;
+
+    if (isChangeEvent) {
+      this.rangeDrop.emit(averageValue);
+    } else {
+      this.rangeDrag.emit(averageValue);
+    }
+  }
+
+  /**
+   * Update progress bar for range mode (Requirement 1.7)
+   */
+  private updateRangeProgressDisplay(): void {
+    if (!this.rangeSliderState) {
+      return;
+    }
+
+    const { minValue, maxValue } = this.rangeSliderState;
+
+    // Calculate progress percentages for min and max handles
+    const minProgress = ((minValue - this.min) / (this.max - this.min)) * 100;
+    const maxProgress = ((maxValue - this.min) / (this.max - this.min)) * 100;
+
+    // Update display values (show range as "min - max")
+    const minDisplayValue = this.getDisplayValue(minValue);
+    const maxDisplayValue = this.getDisplayValue(maxValue);
+    this.displayValue = `${minDisplayValue} - ${maxDisplayValue}`;
+
+    // Position display value at the midpoint of the range
+    const midProgress = (minProgress + maxProgress) / 2;
+    if (this.inputDisplayValueElementRef?.nativeElement) {
+      this.renderer.setStyle(this.inputDisplayValueElementRef.nativeElement, 'left', `${midProgress}%`);
+    }
+
+    // Update progress bar to show selected range (Requirement 1.7)
+    if (this.options.showProgressBar) {
+      // Apply gradient showing the selected range between min and max handles
+      const gradient = `linear-gradient(to right, 
+        #C2C2CD 0%, 
+        #C2C2CD ${minProgress}%, 
+        #005F9E ${minProgress}%, 
+        #005F9E ${maxProgress}%, 
+        #C2C2CD ${maxProgress}%, 
+        #C2C2CD 100%)`;
+
+      // Apply to both input elements
+      if (this.minInputElementRef?.nativeElement) {
+        this.renderer.setStyle(this.minInputElementRef.nativeElement, 'background', gradient);
+      }
+      if (this.maxInputElementRef?.nativeElement) {
+        this.renderer.setStyle(this.maxInputElementRef.nativeElement, 'background', gradient);
+      }
+    }
   }
 }
 
@@ -345,6 +546,22 @@ export interface RangeInputTickData {
   displayValue: string;
   value: string;
   x: number;
+}
+
+/**
+ * Internal state for range slider (dual-handle) mode
+ */
+export interface RangeSliderState {
+  /** Current minimum value */
+  minValue: number;
+  /** Current maximum value */
+  maxValue: number;
+  /** Whether the minimum handle is currently being dragged */
+  isDraggingMin: boolean;
+  /** Whether the maximum handle is currently being dragged */
+  isDraggingMax: boolean;
+  /** Which handle currently has focus */
+  focusedHandle: 'min' | 'max' | null;
 }
 
 /**

@@ -3,6 +3,7 @@
   [ngClass]="{
     'has-display-value': !options.hideDisplayValue,
     'has-ticks': options.showTicks,
+    'range-mode': options.enableRangeMode,
   }">
   <div class="c-range-input__wrapper">
     <div [hidden]="options.hideDisplayValue" class="c-range-input__display-wrapper">
@@ -18,25 +19,72 @@
     </div>
 
     <div class="c-range-input__field-wrapper">
-      <input
-        #input
-        class="c-range-input__field"
-        type="range"
-        [attr.id]="id"
-        [attr.max]="max"
-        [attr.min]="min"
-        [attr.step]="step"
-        [mgCommonFormsOptionalAttributes]="{
-          'aria-label': ariaLabel,
-          'aria-labelledby': ariaLabelledby,
-          'aria-describedby': ariaDescribedby,
-          name: name,
-        }"
-        (blur)="onBlurEvent($event)"
-        (change)="onChangeEvent($event)"
-        (input)="onInputEvent($event)"
-        (mouseup)="onMouseupEvent($event)"
-        (touchend)="onMouseupEvent($event)" />
+      @if (options.enableRangeMode) {
+        <!-- Dual-handle mode: Two input elements for min and max -->
+        <input
+          #minInput
+          class="c-range-input__field c-range-input__field--min"
+          type="range"
+          [attr.id]="id + '-min'"
+          [attr.max]="max"
+          [attr.min]="min"
+          [attr.step]="step"
+          [value]="rangeSliderState?.minValue ?? min"
+          [mgCommonFormsOptionalAttributes]="{
+            'aria-label': options.minHandleAriaLabel ?? ariaLabel ?? 'Minimum value',
+            'aria-labelledby': ariaLabelledby,
+            'aria-describedby': ariaDescribedby,
+            name: name ? name + '-min' : undefined,
+          }"
+          (blur)="onBlurEvent($event)"
+          (change)="onMinChangeEvent($event)"
+          (input)="onMinInputEvent($event)"
+          (mouseup)="onMouseupEvent($event)"
+          (touchend)="onMouseupEvent($event)"
+          (focus)="onMinFocusEvent()" />
+        <input
+          #maxInput
+          class="c-range-input__field c-range-input__field--max"
+          type="range"
+          [attr.id]="id + '-max'"
+          [attr.max]="max"
+          [attr.min]="min"
+          [attr.step]="step"
+          [value]="rangeSliderState?.maxValue ?? max"
+          [mgCommonFormsOptionalAttributes]="{
+            'aria-label': options.maxHandleAriaLabel ?? ariaLabel ?? 'Maximum value',
+            'aria-labelledby': ariaLabelledby,
+            'aria-describedby': ariaDescribedby,
+            name: name ? name + '-max' : undefined,
+          }"
+          (blur)="onBlurEvent($event)"
+          (change)="onMaxChangeEvent($event)"
+          (input)="onMaxInputEvent($event)"
+          (mouseup)="onMouseupEvent($event)"
+          (touchend)="onMouseupEvent($event)"
+          (focus)="onMaxFocusEvent()" />
+      } @else {
+        <!-- Single-handle mode: Original single input element -->
+        <input
+          #input
+          class="c-range-input__field"
+          type="range"
+          [attr.id]="id"
+          [attr.max]="max"
+          [attr.min]="min"
+          [attr.step]="step"
+          [mgCommonFormsOptionalAttributes]="{
+            'aria-label': ariaLabel,
+            'aria-labelledby': ariaLabelledby,
+            'aria-describedby': ariaDescribedby,
+            name: name,
+          }"
+          (blur)="onBlurEvent($event)"
+          (change)="onChangeEvent($event)"
+          (input)="onInputEvent($event)"
+          (mouseup)="onMouseupEvent($event)"
+          (touchend)="onMouseupEvent($event)" />
+      }
     </div>
 
     @if (options.showTicks) {
