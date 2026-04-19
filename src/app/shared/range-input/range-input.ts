@@ -2,17 +2,7 @@ import { NgControl } from '@angular/forms';
 import { InputControl } from '../input-control';
 import { ValueConverter } from '../service/value-converter';
 import { RangeInputNumberFormatConverter } from './range-input-number-format-converter';
-import {
-  debounceTime,
-  distinctUntilChanged,
-  EMPTY,
-  filter,
-  iif,
-  of,
-  Subject,
-  switchMap,
-  takeUntil,
-} from 'rxjs';
+import { debounceTime, distinctUntilChanged, EMPTY, filter, iif, of, Subject, switchMap, takeUntil } from 'rxjs';
 import {
   Component,
   ElementRef,
@@ -38,10 +28,7 @@ let index = 0;
   ],
   standalone: false,
 })
-export class RangeInputComponent
-  extends InputControl<string, number>
-  implements OnInit, OnDestroy
-{
+export class RangeInputComponent extends InputControl<string, number> implements OnInit, OnDestroy {
   @Input() public ariaLabel?: string;
   @Input() public ariaLabelledby?: string;
   @Input() public ariaDescribedby?: string;
@@ -114,10 +101,7 @@ export class RangeInputComponent
     this.model.valueChanges
       .pipe(
         takeUntil(this.componentDestroyed$),
-        filter(
-          (): boolean =>
-            this.isChangeEvent === false && this.isInputEvent === false,
-        ),
+        filter((): boolean => this.isChangeEvent === false && this.isInputEvent === false),
       )
       .subscribe(this.updateProgressDisplay);
 
@@ -139,9 +123,7 @@ export class RangeInputComponent
       .pipe(
         takeUntil(this.componentDestroyed$),
         debounceTime(this.dragDebounce),
-        switchMap((value: number) =>
-          iif((): boolean => this.isInputEvent === true, of(value), EMPTY),
-        ),
+        switchMap((value: number) => iif((): boolean => this.isInputEvent === true, of(value), EMPTY)),
         distinctUntilChanged(),
       )
       .subscribe((value: number): void => {
@@ -154,9 +136,7 @@ export class RangeInputComponent
       .pipe(
         takeUntil(this.componentDestroyed$),
         debounceTime(this.dropDebounce),
-        switchMap((value: number) =>
-          iif((): boolean => this.isChangeEvent === true, of(value), EMPTY),
-        ),
+        switchMap((value: number) => iif((): boolean => this.isChangeEvent === true, of(value), EMPTY)),
         distinctUntilChanged(),
       )
       .subscribe((value: number): void => {
@@ -195,9 +175,7 @@ export class RangeInputComponent
   }
 
   protected onMouseupEvent(event: Event): void {
-    const isSafari = /^((?!chrome|chromium).)*safari/i.test(
-      navigator.userAgent,
-    );
+    const isSafari = /^((?!chrome|chromium).)*safari/i.test(navigator.userAgent);
     if (isSafari) {
       this.onChangeEvent(event);
     }
@@ -214,20 +192,13 @@ export class RangeInputComponent
   protected writeValueToView(value: string): void {
     console.log('writeValueToView', value);
     if (this.inputElementRef?.nativeElement != null) {
-      this.renderer.setProperty(
-        this.inputElementRef.nativeElement,
-        'value',
-        value,
-      );
+      this.renderer.setProperty(this.inputElementRef.nativeElement, 'value', value);
     }
   }
 
   protected override viewValueToModelValue(value: string): number {
     console.log('viewValueToModelValue', value);
-    return this.valueConverter.fromView(
-      value,
-      this.numberFormatConverterOptions ?? this.boundedFormat,
-    );
+    return this.valueConverter.fromView(value, this.numberFormatConverterOptions ?? this.boundedFormat);
   }
 
   protected override modelValueToViewValue(value: number): string | undefined {
@@ -235,22 +206,14 @@ export class RangeInputComponent
     if (value == null) {
       return undefined;
     }
-    return this.valueConverter.toView(
-      value,
-      this.numberFormatConverterOptions ?? this.boundedFormat,
-    );
+    return this.valueConverter.toView(value, this.numberFormatConverterOptions ?? this.boundedFormat);
   }
 
   private updateProgressDisplay(value: number): void {
-    const sliderProgress: number =
-      ((value - this.min) / (this.max - this.min)) * 100;
+    const sliderProgress: number = ((value - this.min) / (this.max - this.min)) * 100;
 
     this.displayValue = this.getDisplayValue(value);
-    this.renderer.setStyle(
-      this.inputDisplayValueElementRef.nativeElement,
-      'left',
-      `${sliderProgress}%`,
-    );
+    this.renderer.setStyle(this.inputDisplayValueElementRef.nativeElement, 'left', `${sliderProgress}%`);
 
     if (this.options.showProgressBar) {
       this.renderer.setStyle(
@@ -262,8 +225,7 @@ export class RangeInputComponent
   }
 
   private generateTickData(): void {
-    const tickStep: number =
-      (this.max - this.min) / (this._options.tickSteps - 1);
+    const tickStep: number = (this.max - this.min) / (this._options.tickSteps - 1);
 
     this.tickData = Array(this._options.tickSteps)
       .fill(null)
@@ -273,10 +235,7 @@ export class RangeInputComponent
         return {
           x: ((tickStep * i) / (this.max - this.min)) * 100,
           value: value.toString(),
-          displayValue:
-            i % this._options.tickValueSteps === 0
-              ? this.getFormattedTickValue(value)
-              : null,
+          displayValue: i % this._options.tickValueSteps === 0 ? this.getFormattedTickValue(value) : null,
         };
       });
   }

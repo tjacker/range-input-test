@@ -60,9 +60,7 @@ export class ScenarioSliderComponent implements OnInit {
 
   private getSliderOptions(fearProperty: string) {
     const recessionConvertFormat = (value: number) =>
-      Math.round(value) > this.maximum
-        ? `${this.maximum}`
-        : `${Math.round(value)}`;
+      Math.round(value) > this.maximum ? `${this.maximum}` : `${Math.round(value)}`;
 
     switch (fearProperty) {
       case 'greatRecessionLoss':
@@ -76,9 +74,7 @@ export class ScenarioSliderComponent implements OnInit {
     }
   }
 
-  private getSecondaryMarkerOptions(
-    fearProperty: string,
-  ): SecondaryMarkerOptions | null {
+  private getSecondaryMarkerOptions(fearProperty: string): SecondaryMarkerOptions | null {
     if (fearProperty === 'greatRecessionLoss') {
       const placement = (10 / this.maximum) * 100;
       const title = `Great Recession Loss 10%`;
@@ -93,8 +89,6 @@ export class ScenarioSliderComponent implements OnInit {
       ...this.options,
       ...this.getSliderOptions(this.fearProperty),
     };
-    this.secondaryMarkerOptions = this.getSecondaryMarkerOptions(
-      this.fearProperty,
-    );
+    this.secondaryMarkerOptions = this.getSecondaryMarkerOptions(this.fearProperty);
   }
 }

@@ -27,11 +27,7 @@ export class OptionalAttributesDirective implements OnInit {
   private setAttribute(key: string, value: OptionalAttributesType): void {
     if (!(value === undefined || value === null || value === '')) {
       const attr = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-      this.renderer.setAttribute(
-        this.elRef.nativeElement,
-        attr,
-        value as string,
-      );
+      this.renderer.setAttribute(this.elRef.nativeElement, attr, value as string);
     }
   }
 }

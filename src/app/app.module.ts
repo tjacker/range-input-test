@@ -11,13 +11,7 @@ import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [AppComponent, ScenarioSliderComponent],
-  imports: [
-    BrowserModule,
-    SharedModule,
-    FormsModule,
-    FontAwesomeModule,
-    AppRoutingModule,
-  ],
+  imports: [BrowserModule, SharedModule, FormsModule, FontAwesomeModule, AppRoutingModule],
   providers: [
     {
       provide: RangeInputNumberFormatConverter,

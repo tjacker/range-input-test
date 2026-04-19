@@ -1,10 +1,7 @@
 import { NgControl, ValidatorFn } from '@angular/forms';
 import { ValueAccessor } from './value-accessor';
 
-export abstract class InputControl<
-  TViewValue,
-  TModelValue,
-> extends ValueAccessor<TViewValue, TModelValue> {
+export abstract class InputControl<TViewValue, TModelValue> extends ValueAccessor<TViewValue, TModelValue> {
   public abstract model: NgControl;
 
   private validators: ValidatorFn[] = [];

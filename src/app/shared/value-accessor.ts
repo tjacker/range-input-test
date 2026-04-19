@@ -1,46 +1,28 @@
 import { ControlValueAccessor } from '@angular/forms';
 
-export abstract class ValueAccessor<
-  TViewValue,
-  TModelValue,
-> implements ControlValueAccessor {
-  private beforeViewValueToModelValueFns: ((
-    value: TViewValue,
-  ) => TViewValue)[] = [];
-  private afterViewValueToModelValueFns: ((
-    value: TModelValue,
-  ) => TModelValue)[] = [];
-  private beforeModelValueToViewValueFns: ((
-    value: TModelValue,
-  ) => TModelValue)[] = [];
-  private afterModelValueToViewValueFns: ((value: TViewValue) => TViewValue)[] =
-    [];
+export abstract class ValueAccessor<TViewValue, TModelValue> implements ControlValueAccessor {
+  private beforeViewValueToModelValueFns: ((value: TViewValue) => TViewValue)[] = [];
+  private afterViewValueToModelValueFns: ((value: TModelValue) => TModelValue)[] = [];
+  private beforeModelValueToViewValueFns: ((value: TModelValue) => TModelValue)[] = [];
+  private afterModelValueToViewValueFns: ((value: TViewValue) => TViewValue)[] = [];
   private beforeOnChangeFns: ((value: TModelValue) => void)[] = [];
   private afterOnChangeFns: ((value: TModelValue) => void)[] = [];
   private onChangeFns: ((value: TModelValue) => void)[] = [];
   private onTouchedFns: (() => void)[] = [];
 
-  public registerBeforeViewValueToModelValue(
-    fn: (value: TViewValue) => TViewValue,
-  ): void {
+  public registerBeforeViewValueToModelValue(fn: (value: TViewValue) => TViewValue): void {
     this.beforeViewValueToModelValueFns.push(fn);
   }
 
-  public registerAfterViewValueToModelValue(
-    fn: (value: TModelValue) => TModelValue,
-  ): void {
+  public registerAfterViewValueToModelValue(fn: (value: TModelValue) => TModelValue): void {
     this.afterViewValueToModelValueFns.unshift(fn);
   }
 
-  public registerBeforeModelValueToViewValue(
-    fn: (value: TModelValue) => TModelValue,
-  ): void {
+  public registerBeforeModelValueToViewValue(fn: (value: TModelValue) => TModelValue): void {
     this.beforeModelValueToViewValueFns.push(fn);
   }
 
-  public registerAfterModelValueToViewValue(
-    fn: (value: TViewValue) => TViewValue,
-  ): void {
+  public registerAfterModelValueToViewValue(fn: (value: TViewValue) => TViewValue): void {
     this.afterModelValueToViewValueFns.unshift(fn);
   }
 
@@ -89,30 +71,20 @@ export abstract class ValueAccessor<
   private executeViewValueToModelValue(value: TViewValue): TModelValue {
     return this.executeRegisteredFns(
       this.afterViewValueToModelValueFns,
-      this.viewValueToModelValue(
-        this.executeRegisteredFns(this.beforeViewValueToModelValueFns, value),
-      ),
+      this.viewValueToModelValue(this.executeRegisteredFns(this.beforeViewValueToModelValueFns, value)),
     );
   }
 
   private executeModelValueToViewValue(value: TModelValue): TViewValue {
     return this.executeRegisteredFns(
       this.afterModelValueToViewValueFns,
-      this.modelValueToViewValue(
-        this.executeRegisteredFns(this.beforeModelValueToViewValueFns, value),
-      ),
+      this.modelValueToViewValue(this.executeRegisteredFns(this.beforeModelValueToViewValueFns, value)),
     );
   }
 
-  private executeRegisteredFns<TValue>(
-    fns: ((value?: TValue) => TValue | void)[],
-    value?: TValue,
-  ): any {
+  private executeRegisteredFns<TValue>(fns: ((value?: TValue) => TValue | void)[], value?: TValue): any {
     return fns.reduce(
-      (
-        previousValue: TValue,
-        fn: (currentValue?: TValue) => TValue,
-      ): TValue | void => fn(previousValue ?? value),
+      (previousValue: TValue, fn: (currentValue?: TValue) => TValue): TValue | void => fn(previousValue ?? value),
       value,
     );
   }

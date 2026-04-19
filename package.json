@@ -5,6 +5,8 @@
     "ng": "ng",
     "start": "nx serve",
     "build": "nx build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "watch": "nx build --watch --configuration development",
     "test": "nx test"
   },
@@ -41,9 +43,11 @@
     "@types/jasmine": "~4.3.0",
     "angular-cli-ghpages": "^3.0.2",
     "angular-eslint": "^21.3.1",
+    "eslint-config-prettier": "^10.1.8",
     "jasmine-core": "~4.5.0",
     "jsdom": "^29.0.2",
     "nx": "22.6.5",
+    "prettier": "^3.8.3",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.58.2",
     "vitest": "^4.1.4"
