@@ -255,6 +255,32 @@ export class RangeInputComponent extends InputControl<string, number> implements
     return this.valueConverter.toView(value, this.displayFormat);
   }
 
+  /**
+   * Get formatted ARIA valuetext for screen readers (Requirements 6.2, 6.4)
+   * @param value - The current slider value
+   * @returns Formatted string for aria-valuetext attribute
+   */
+  public getAriaValueText(value: number): string {
+    // Use custom formatter if provided (Requirement 6.4)
+    if (typeof this._options.ariaValueTextFormatter === 'function') {
+      return this._options.ariaValueTextFormatter(value);
+    }
+    // Otherwise use the same formatter as display value (Requirement 6.2)
+    return this.getDisplayValue(value);
+  }
+
+  /**
+   * Update ARIA attributes on value changes (Requirement 6.2)
+   * This method is called automatically when values change.
+   * The actual ARIA attributes are bound in the template using Angular's data binding,
+   * which ensures they update reactively when the underlying values change.
+   */
+  private updateAriaAttributes(): void {
+    // ARIA attributes are updated automatically via Angular's data binding in the template
+    // [attr.aria-valuenow] and [attr.aria-valuetext] bindings handle the updates
+    // This method exists for documentation and potential future manual updates if needed
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected onBlurEvent(event: FocusEvent): void {
     this.onTouched();

@@ -31,6 +31,10 @@
           [attr.min]="min"
           [attr.step]="step"
           [value]="rangeSliderState?.minValue ?? min"
+          [attr.aria-valuemin]="min"
+          [attr.aria-valuemax]="max"
+          [attr.aria-valuenow]="rangeSliderState?.minValue ?? min"
+          [attr.aria-valuetext]="getAriaValueText(rangeSliderState?.minValue ?? min)"
           [mgCommonFormsOptionalAttributes]="{
             'aria-label': options.minHandleAriaLabel ?? ariaLabel ?? 'Minimum value',
             'aria-labelledby': ariaLabelledby,
@@ -56,6 +60,10 @@
           [attr.min]="min"
           [attr.step]="step"
           [value]="rangeSliderState?.maxValue ?? max"
+          [attr.aria-valuemin]="min"
+          [attr.aria-valuemax]="max"
+          [attr.aria-valuenow]="rangeSliderState?.maxValue ?? max"
+          [attr.aria-valuetext]="getAriaValueText(rangeSliderState?.maxValue ?? max)"
           [mgCommonFormsOptionalAttributes]="{
             'aria-label': options.maxHandleAriaLabel ?? ariaLabel ?? 'Maximum value',
             'aria-labelledby': ariaLabelledby,
@@ -82,6 +90,10 @@
           [attr.max]="max"
           [attr.min]="min"
           [attr.step]="step"
+          [attr.aria-valuemin]="min"
+          [attr.aria-valuemax]="max"
+          [attr.aria-valuenow]="model.value ?? min"
+          [attr.aria-valuetext]="getAriaValueText(model.value ?? min)"
           [mgCommonFormsOptionalAttributes]="{
             'aria-label': ariaLabel,
             'aria-labelledby': ariaLabelledby,
@@ -100,10 +112,14 @@
     </div>
 
     @if (options.showTicks) {
-      <div class="c-range-input__ticks-wrapper" [ngClass]="options.customTickClass">
+      <div
+        class="c-range-input__ticks-wrapper"
+        [ngClass]="options.customTickClass"
+        role="group"
+        aria-label="Tick marks">
         <svg role="presentation" width="100%" height="8" xmlns="http://www.w3.org/2000/svg">
           @for (tick of tickData; track tick) {
-            <rect class="range-tick" [attr.x]="tick.x + '%'" y="-10" width="1" height="8"></rect>
+            <rect class="range-tick" [attr.x]="tick.x + '%'" y="-10" width="1" height="8" role="presentation"></rect>
           }
         </svg>
         <svg role="presentation" width="100%" height="14" xmlns="http://www.w3.org/2000/svg">
@@ -114,6 +130,8 @@
                   class="range-value"
                   [attr.x]="tick.x + '%'"
                   text-anchor="middle"
+                  role="button"
+                  [attr.aria-label]="'Set value to ' + tick.displayValue"
                   (click)="onTickValueClick(tick.value)">
                   @if (prefix) {
                     <tspan>{{ prefix }}</tspan>
