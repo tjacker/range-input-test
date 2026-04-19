@@ -273,6 +273,102 @@ export class RangeInputComponent extends InputControl<string, number> implements
     this.onChange(value);
   }
 
+  /**
+   * Handle keyboard navigation events (Requirements 2.1-2.10)
+   * @param event - The keyboard event
+   * @param handle - Which handle triggered the event ('single', 'min', or 'max')
+   */
+  protected handleKeyboardEvent(event: KeyboardEvent, handle: 'single' | 'min' | 'max'): void {
+    // Check if keyboard navigation is enabled
+    if (!this._options.enableKeyboardNavigation) {
+      return;
+    }
+
+    // Get current value based on handle type
+    let currentValue: number;
+    if (handle === 'single') {
+      currentValue = this.model.value ?? this.min;
+    } else if (handle === 'min') {
+      currentValue = this.rangeSliderState?.minValue ?? this.min;
+    } else {
+      currentValue = this.rangeSliderState?.maxValue ?? this.max;
+    }
+
+    // Calculate step size (default to 1 if step is 'any')
+    const stepSize = typeof this.step === 'number' ? this.step : 1;
+
+    // Calculate large step size (percentage of range)
+    const range = this.max - this.min;
+    const largeStepSize = (range * (this._options.largeStepPercentage ?? 10)) / 100;
+
+    let newValue: number | null = null;
+    let shouldPreventDefault = false;
+
+    // Handle different key presses
+    switch (event.key) {
+      case 'ArrowUp':
+      case 'ArrowRight':
+        // Increase by step (Requirements 2.1, 2.3)
+        newValue = Math.min(currentValue + stepSize, this.max);
+        shouldPreventDefault = true;
+        break;
+
+      case 'ArrowDown':
+      case 'ArrowLeft':
+        // Decrease by step (Requirements 2.2, 2.4)
+        newValue = Math.max(currentValue - stepSize, this.min);
+        shouldPreventDefault = true;
+        break;
+
+      case 'PageUp':
+        // Increase by large step (Requirement 2.5)
+        newValue = Math.min(currentValue + largeStepSize, this.max);
+        shouldPreventDefault = true;
+        break;
+
+      case 'PageDown':
+        // Decrease by large step (Requirement 2.6)
+        newValue = Math.max(currentValue - largeStepSize, this.min);
+        shouldPreventDefault = true;
+        break;
+
+      case 'Home':
+        // Set to minimum (Requirement 2.7)
+        newValue = this.min;
+        shouldPreventDefault = true;
+        break;
+
+      case 'End':
+        // Set to maximum (Requirement 2.8)
+        newValue = this.max;
+        shouldPreventDefault = true;
+        break;
+    }
+
+    // Prevent default browser behavior for handled keys (Requirement 2.1-2.10)
+    if (shouldPreventDefault) {
+      event.preventDefault();
+    }
+
+    // Apply the new value if it was calculated
+    if (newValue !== null) {
+      if (handle === 'single') {
+        // Single-handle mode
+        const viewValue = this.modelValueToViewValue(newValue);
+        if (viewValue !== undefined) {
+          this.isChangeEvent = true;
+          this.onChange(viewValue);
+        }
+      } else if (handle === 'min') {
+        // Dual-handle mode: update min value (Requirement 2.9)
+        this.updateMinValue(newValue, true);
+      } else {
+        // Dual-handle mode: update max value (Requirement 2.9)
+        this.updateMaxValue(newValue, true);
+      }
+    }
+  }
+
   protected writeValueToView(value: string): void {
     console.log('writeValueToView', value);
     if (this.inputElementRef?.nativeElement != null) {

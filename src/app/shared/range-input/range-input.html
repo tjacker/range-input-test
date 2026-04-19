@@ -41,7 +41,8 @@
           (input)="onMinInputEvent($event)"
           (mouseup)="onMouseupEvent($event)"
           (touchend)="onMouseupEvent($event)"
-          (focus)="onMinFocusEvent()" />
+          (focus)="onMinFocusEvent()"
+          (keydown)="handleKeyboardEvent($event, 'min')" />
         <input
           #maxInput
           class="c-range-input__field c-range-input__field--max"
@@ -62,7 +63,8 @@
           (input)="onMaxInputEvent($event)"
           (mouseup)="onMouseupEvent($event)"
           (touchend)="onMouseupEvent($event)"
-          (focus)="onMaxFocusEvent()" />
+          (focus)="onMaxFocusEvent()"
+          (keydown)="handleKeyboardEvent($event, 'max')" />
       } @else {
         <!-- Single-handle mode: Original single input element -->
         <input
@@ -83,7 +85,8 @@
           (change)="onChangeEvent($event)"
           (input)="onInputEvent($event)"
           (mouseup)="onMouseupEvent($event)"
-          (touchend)="onMouseupEvent($event)" />
+          (touchend)="onMouseupEvent($event)"
+          (keydown)="handleKeyboardEvent($event, 'single')" />
       }
     </div>
 
