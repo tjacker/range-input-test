@@ -1,0 +1,430 @@
+# Implementation Plan: ngx-slider Feature Parity
+
+## Overview
+
+This implementation extends the existing RangeInputComponent to achieve feature parity with ngx-slider while maintaining the native HTML `<input type="range">` foundation. The implementation follows 8 phases corresponding to the design document. All testing (unit tests, property-based tests, and accessibility tests) will be implemented after the core functionality is complete.
+
+## Tasks
+
+- [ ] 1. Extend RangeInputOptions interface and component inputs
+  - [ ] 1.1 Add range slider configuration options to RangeInputOptions
+    - Add enableRangeMode, minValue, maxValue properties
+    - Add backward-compatible defaults
+    - _Requirements: 1.1, 1.2, 8.1, 8.3, 8.4_
+  - [ ] 1.2 Add keyboard navigation configuration options
+    - Add enableKeyboardNavigation, largeStepPercentage properties
+    - _Requirements: 2.1-2.10, 8.1, 8.3_
+  - [ ] 1.3 Add animation configuration options
+    - Add enableAnimations, animationDuration, animationEasing properties
+    - _Requirements: 3.1-3.7, 8.1, 8.3_
+  - [ ] 1.4 Add tooltip configuration options
+    - Add showTooltip, tooltipPlacement, tooltipDelay, formatTooltipValue, tooltipTemplate properties
+    - _Requirements: 4.1-4.8, 8.1, 8.3_
+  - [ ] 1.5 Add styling configuration options
+    - Add customHandleClass, customTrackClass, customProgressClass, customTickClass, handleSize, trackHeight properties
+    - _Requirements: 5.1-5.8, 8.1, 8.3_
+  - [ ] 1.6 Add accessibility configuration options
+    - Add ariaValueTextFormatter, minHandleAriaLabel, maxHandleAriaLabel properties
+    - _Requirements: 6.1-6.7, 8.1, 8.3_
+  - [ ] 1.7 Add iOS compatibility configuration options
+    - Document touch-action and webkit-appearance requirements
+    - _Requirements: 7.1-7.7, 8.1_
+
+- [ ] 2. Implement Phase 1: Range Slider Support (Dual-Handle Mode)
+  - [ ] 2.1 Create internal state management for range mode
+    - Create RangeSliderState interface
+    - Add rangeSliderState property to component
+    - Initialize state based on enableRangeMode flag
+    - _Requirements: 1.1, 1.2_
+  - [ ] 2.2 Update component template for dual-handle rendering
+    - Add conditional rendering for second input element
+    - Add ViewChild references for minInput and maxInput
+    - Update template to handle single vs dual mode
+    - _Requirements: 1.2_
+  - [ ] 2.3 Implement min/max constraint logic
+    - Add validation in onChange handlers to prevent min > max
+    - Add validation to prevent max < min
+    - Update rangeSliderState on valid changes
+    - _Requirements: 1.3, 1.4_
+  - [ ] 2.4 Implement range change event emissions
+    - Add @Output properties: minValueChange, maxValueChange, rangeChange
+    - Emit events on value changes in dual-handle mode
+    - _Requirements: 1.5_
+  - [ ] 2.5 Handle handle overlap with z-index and pointer-events
+    - Update SCSS to manage overlapping handles
+    - Ensure both handles remain clickable when overlapped
+    - _Requirements: 1.6_
+  - [ ] 2.6 Update progress bar styling for range mode
+    - Modify updateProgressDisplay to show selected range
+    - Apply distinct styling between min and max handles
+    - _Requirements: 1.7_
+
+- [ ] 3. Implement Phase 2: Keyboard Navigation
+  - [ ] 3.1 Add keyboard event listeners to input elements
+    - Add (keydown) event binding in template
+    - Create handleKeyboardEvent method
+    - _Requirements: 2.1-2.10_
+  - [ ] 3.2 Implement arrow key navigation (up/down/left/right)
+    - Handle ArrowUp and ArrowRight to increase by step
+    - Handle ArrowDown and ArrowLeft to decrease by step
+    - Respect configured step value
+    - Prevent exceeding min/max boundaries
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.10_
+  - [ ] 3.3 Implement Page Up/Down navigation
+    - Calculate large step size as percentage of range
+    - Handle PageUp to increase by large step
+    - Handle PageDown to decrease by large step
+    - Respect min/max boundaries
+    - _Requirements: 2.5, 2.6_
+  - [ ] 3.4 Implement Home/End key navigation
+    - Handle Home key to set value to minimum
+    - Handle End key to set value to maximum
+    - _Requirements: 2.7, 2.8_
+  - [ ] 3.5 Implement keyboard navigation isolation in dual-handle mode
+    - Track focused handle (min or max)
+    - Apply keyboard navigation only to focused handle
+    - Prevent cross-handle interference
+    - _Requirements: 2.9_
+  - [ ] 3.6 Prevent default browser behavior for handled keys
+    - Call event.preventDefault() for all handled keyboard events
+    - _Requirements: 2.1-2.10_
+
+- [ ] 4. Implement Phase 3: Slider Animations
+  - [ ] 4.1 Add CSS transition properties to SCSS
+    - Define transition for handle position
+    - Define transition for progress bar
+    - Define transition for display value position
+    - Use configurable duration and easing
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.7_
+  - [ ] 4.2 Create animation state management
+    - Add animationInProgress flag
+    - Create methods: enableAnimations(), disableAnimations()
+    - _Requirements: 3.5, 3.6_
+  - [ ] 4.3 Implement animation bypass during user drag
+    - Detect drag start and remove transition classes
+    - Detect drag end and restore transition classes
+    - Use Renderer2 to toggle transition styles
+    - _Requirements: 3.6_
+  - [ ] 4.4 Apply animations on programmatic value changes
+    - Detect programmatic changes (not from user interaction)
+    - Apply transition classes for programmatic changes
+    - _Requirements: 3.1, 3.2, 3.3_
+
+- [ ] 5. Implement Phase 4: Custom Tooltips
+  - [ ] 5.1 Create tooltip template in component HTML
+    - Add tooltip div element with positioning
+    - Add ViewChild reference for tooltip element
+    - Create TooltipState interface and property
+    - _Requirements: 4.1, 4.5_
+  - [ ] 5.2 Implement tooltip positioning logic
+    - Calculate tooltip position based on handle position
+    - Support configurable placement (top, bottom, left, right)
+    - Update position on value changes
+    - _Requirements: 4.5_
+  - [ ] 5.3 Implement tooltip visibility on hover
+    - Add mouseenter/mouseleave event listeners
+    - Show tooltip on hover when showTooltip includes 'onHover'
+    - _Requirements: 4.2_
+  - [ ] 5.4 Implement tooltip persistence during drag
+    - Keep tooltip visible throughout drag operation
+    - Update tooltip content during drag
+    - _Requirements: 4.3_
+  - [ ] 5.5 Implement tooltip hide delay
+    - Use RxJS debounceTime for configurable delay
+    - Create tooltipHide$ Subject
+    - Hide tooltip after delay when interaction stops
+    - _Requirements: 4.4_
+  - [ ] 5.6 Implement custom tooltip formatting
+    - Support formatTooltipValue function option
+    - Apply formatter to tooltip content
+    - _Requirements: 4.8_
+  - [ ] 5.7 Support custom tooltip templates
+    - Support tooltipTemplate TemplateRef option
+    - Render custom template when provided
+    - _Requirements: 4.1_
+  - [ ] 5.8 Implement dual-handle tooltip support
+    - Create separate tooltips for min and max handles
+    - Track which handle is being interacted with
+    - _Requirements: 4.6_
+  - [ ] 5.9 Implement always-visible tooltip mode
+    - Support showTooltip = 'always' option
+    - Keep tooltip visible regardless of interaction
+    - _Requirements: 4.7_
+
+- [ ] 6. Implement Phase 5: Enhanced Styling Options
+  - [ ] 6.1 Add CSS custom properties for colors and sizes
+    - Define CSS variables for handle, track, progress colors
+    - Define CSS variables for handle size and track height
+    - Update SCSS to use CSS variables
+    - _Requirements: 5.7_
+  - [ ] 6.2 Implement dynamic class binding for custom classes
+    - Add [class] bindings for customHandleClass
+    - Add [class] bindings for customTrackClass
+    - Add [class] bindings for customProgressClass
+    - Add [class] bindings for customTickClass
+    - _Requirements: 5.1, 5.2, 5.3, 5.4_
+  - [ ] 6.3 Implement configurable handle size
+    - Apply handleSize to CSS custom property
+    - Update handle styling to use variable
+    - _Requirements: 5.5_
+  - [ ] 6.4 Implement configurable track height
+    - Apply trackHeight to CSS custom property
+    - Update track styling to use variable
+    - _Requirements: 5.6_
+  - [ ] 6.5 Maintain backward compatibility with existing styles
+    - Ensure existing prefix/suffix/formatters still work
+    - Test with existing scenario-slider component
+    - _Requirements: 5.8_
+
+- [ ] 7. Implement Phase 6: Improved Accessibility
+  - [ ] 7.1 Add ARIA attribute bindings to template
+    - Add [attr.aria-valuemin], [attr.aria-valuemax] bindings
+    - Add [attr.aria-valuenow] binding
+    - Add [attr.aria-valuetext] binding
+    - _Requirements: 6.1_
+  - [ ] 7.2 Implement updateAriaAttributes method
+    - Update aria-valuenow on value changes
+    - Update aria-valuetext with formatted value
+    - Call on every value change
+    - _Requirements: 6.2_
+  - [ ] 7.3 Implement custom aria-valuetext formatting
+    - Support ariaValueTextFormatter option
+    - Apply formatter to aria-valuetext attribute
+    - _Requirements: 6.4_
+  - [ ] 7.4 Add distinct ARIA labels for dual-handle mode
+    - Use minHandleAriaLabel for min handle
+    - Use maxHandleAriaLabel for max handle
+    - _Requirements: 6.3_
+  - [ ] 7.5 Ensure tick marks are accessible
+    - Add appropriate ARIA roles to tick elements
+    - Ensure tick values are screen reader accessible
+    - _Requirements: 6.7_
+  - [ ] 7.6 Maintain existing ARIA support
+    - Ensure aria-label, aria-labelledby, aria-describedby still work
+    - _Requirements: 6.6_
+
+- [ ] 8. Implement Phase 7: iOS Compatibility
+  - [ ] 8.1 Add touch-action CSS property
+    - Apply touch-action: none to slider container
+    - Prevent scroll/drag conflicts
+    - _Requirements: 7.3_
+  - [ ] 8.2 Preserve webkit-appearance properties
+    - Test which webkit-appearance values maintain touch handlers
+    - Document required webkit-appearance settings
+    - _Requirements: 7.2, 7.6_
+  - [ ] 8.3 Ensure drag from thumb works on iOS
+    - Test drag gestures starting from thumb
+    - _Requirements: 7.5_
+  - [ ] 8.4 Document iOS limitations
+    - Document two-tap interaction pattern
+    - Document drag-must-start-on-thumb limitation
+    - Document step attribute limitation
+    - _Requirements: 7.1, 7.4_
+  - [ ] 8.5 Add fallback touch event handlers if needed
+    - Implement touch event handlers if native drag fails
+    - _Requirements: 7.7_
+
+- [ ] 9. Implement Phase 8: API Consistency and Documentation
+  - [ ] 9.1 Review all new options for naming consistency
+    - Ensure consistent naming patterns across all new options
+    - _Requirements: 8.2_
+  - [ ] 9.2 Add JSDoc comments to all new properties
+    - Document all RangeInputOptions properties
+    - Document all @Input and @Output properties
+    - _Requirements: 8.6_
+  - [ ] 9.3 Implement configuration validation
+    - Validate option combinations
+    - Log console warnings for invalid configurations
+    - _Requirements: 8.5_
+  - [ ] 9.4 Add TypeScript types and interfaces
+    - Export all new interfaces
+    - Ensure type safety for all options
+    - _Requirements: 8.6_
+  - [ ] 9.5 Create migration guide
+    - Document how to upgrade from existing implementation
+    - Provide examples for each new feature
+    - _Requirements: 8.4_
+  - [ ] 9.6 Update README with feature examples
+    - Add examples for range mode
+    - Add examples for keyboard navigation
+    - Add examples for animations, tooltips, styling
+    - _Requirements: 8.6_
+
+- [ ] 10. Integration and final wiring
+  - [ ] 10.1 Wire all phases together
+    - Ensure all features work together correctly
+    - Test feature combinations manually
+    - _Requirements: All requirements_
+  - [ ] 10.2 Update scenario-slider to use new features
+    - Demonstrate new features in existing demo component
+    - _Requirements: All requirements_
+
+- [ ] 11. Manual iOS testing
+  - [ ] 11.1 Test on iOS 15+ physical devices
+    - Test in scrollable containers
+    - Test with various step values
+    - Test drag gestures
+    - _Requirements: 7.1-7.7_
+  - [ ] 11.2 Verify keyboard navigation works with screen readers
+    - Test keyboard navigation with NVDA/JAWS/VoiceOver
+    - _Requirements: 6.5_
+
+- [ ] 12. Testing Infrastructure and Test Implementation
+  - [ ] 12.1 Set up testing infrastructure
+    - Install fast-check library for property-based testing
+    - Install @axe-core/playwright for accessibility testing
+    - Configure Vitest for property-based test execution
+    - Create test utilities for component instantiation and configuration
+    - _Requirements: All requirements (testing foundation)_
+  - [ ] 12.2 Write unit tests for RangeInputOptions validation
+    - Test invalid configurations are handled gracefully
+    - Test default values are applied correctly
+    - _Requirements: 8.5_
+  - [ ] 12.3 Write property test for minimum handle constraint
+    - **Property 1: Minimum handle constraint in range mode**
+    - **Validates: Requirements 1.3**
+    - Use fast-check to generate random min/max/newMin values
+    - Assert min never exceeds max after drag
+    - _Requirements: 1.3_
+  - [ ] 12.4 Write property test for maximum handle constraint
+    - **Property 2: Maximum handle constraint in range mode**
+    - **Validates: Requirements 1.4**
+    - Use fast-check to generate random min/max/newMax values
+    - Assert max never goes below min after drag
+    - _Requirements: 1.4_
+  - [ ] 12.5 Write property test for range event emission
+    - **Property 3: Range event emission**
+    - **Validates: Requirements 1.5**
+    - Assert separate events are emitted for min and max changes
+    - Assert events contain correct values
+    - _Requirements: 1.5_
+  - [ ] 12.6 Write unit tests for range slider mode
+    - Test mode switching between single and dual
+    - Test handle overlap scenarios
+    - Test progress bar rendering in range mode
+    - _Requirements: 1.1-1.7_
+  - [ ] 12.7 Write property test for arrow key navigation
+    - **Property 4: Arrow key navigation**
+    - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.10**
+    - Generate random current values and key presses
+    - Assert value changes by exactly one step
+    - Assert boundaries are respected
+    - _Requirements: 2.1-2.4, 2.10_
+  - [ ] 12.8 Write property test for Page Up/Down navigation
+    - **Property 5: Page Up/Down navigation**
+    - **Validates: Requirements 2.5, 2.6**
+    - Generate random values and page key presses
+    - Assert value changes by configured percentage
+    - Assert boundaries are respected
+    - _Requirements: 2.5, 2.6_
+  - [ ] 12.9 Write property test for Home key navigation
+    - **Property 6: Home key navigation**
+    - **Validates: Requirements 2.7**
+    - Generate random current values
+    - Assert Home key always sets to minimum
+    - _Requirements: 2.7_
+  - [ ] 12.10 Write property test for End key navigation
+    - **Property 7: End key navigation**
+    - **Validates: Requirements 2.8**
+    - Generate random current values
+    - Assert End key always sets to maximum
+    - _Requirements: 2.8_
+  - [ ] 12.11 Write property test for keyboard navigation isolation
+    - **Property 8: Keyboard navigation isolation in dual-handle mode**
+    - **Validates: Requirements 2.9**
+    - Generate random dual-handle states and key presses
+    - Assert only focused handle changes
+    - _Requirements: 2.9_
+  - [ ] 12.12 Write unit tests for keyboard navigation
+    - Test all key combinations
+    - Test disabled state prevents keyboard navigation
+    - Test enableKeyboardNavigation flag
+    - _Requirements: 2.1-2.10_
+  - [ ] 12.13 Write property test for animation bypass during drag
+    - **Property 9: Animation bypass during user drag**
+    - **Validates: Requirements 3.6**
+    - Simulate drag operations
+    - Assert CSS transition properties are not applied during drag
+    - _Requirements: 3.6_
+  - [ ] 12.14 Write unit tests for animations
+    - Test animation enable/disable flag
+    - Test animation duration configuration
+    - Test animation easing configuration
+    - _Requirements: 3.1-3.7_
+  - [ ] 12.15 Write property test for tooltip visibility on hover
+    - **Property 10: Tooltip visibility on hover**
+    - **Validates: Requirements 4.2**
+    - Simulate hover events with different showTooltip configurations
+    - Assert tooltip becomes visible
+    - _Requirements: 4.2_
+  - [ ] 12.16 Write property test for tooltip persistence during drag
+    - **Property 11: Tooltip persistence during drag**
+    - **Validates: Requirements 4.3**
+    - Simulate drag operations
+    - Assert tooltip remains visible
+    - _Requirements: 4.3_
+  - [ ] 12.17 Write property test for tooltip hide delay
+    - **Property 12: Tooltip hide delay**
+    - **Validates: Requirements 4.4**
+    - Generate random delay values
+    - Assert tooltip hides after exact delay period
+    - _Requirements: 4.4_
+  - [ ] 12.18 Write property test for custom tooltip formatting
+    - **Property 13: Custom tooltip formatting**
+    - **Validates: Requirements 4.8**
+    - Generate random values and formatter functions
+    - Assert tooltip displays formatted result
+    - _Requirements: 4.8_
+  - [ ] 12.19 Write unit tests for tooltips
+    - Test all showTooltip modes
+    - Test tooltip placement options
+    - Test custom template rendering
+    - _Requirements: 4.1-4.8_
+  - [ ] 12.20 Write unit tests for enhanced styling
+    - Test custom class application
+    - Test size configurations
+    - Test CSS custom property values
+    - _Requirements: 5.1-5.8_
+  - [ ] 12.21 Write property test for ARIA attribute updates
+    - **Property 14: ARIA attribute updates**
+    - **Validates: Requirements 6.1, 6.2**
+    - Generate random value changes
+    - Assert aria-valuenow and aria-valuetext are updated
+    - _Requirements: 6.1, 6.2_
+  - [ ] 12.22 Write property test for custom ARIA valuetext formatting
+    - **Property 15: Custom ARIA valuetext formatting**
+    - **Validates: Requirements 6.4**
+    - Generate random values and formatter functions
+    - Assert aria-valuetext contains formatted result
+    - _Requirements: 6.4_
+  - [ ] 12.23 Write property test for tick accessibility
+    - **Property 16: Tick accessibility**
+    - **Validates: Requirements 6.7**
+    - Assert tick elements have ARIA attributes
+    - _Requirements: 6.7_
+  - [ ] 12.24 Write accessibility tests with axe-core
+    - Run axe-core against component in various states
+    - Assert 100% accessibility score
+    - _Requirements: 6.1-6.7_
+  - [ ] 12.25 Write integration tests with Angular Forms
+    - Test with FormControl and FormGroup
+    - Test with validators
+    - Test change detection
+    - _Requirements: All requirements_
+  - [ ] 12.26 Run full test suite
+    - Run all unit tests
+    - Run all property-based tests (100 iterations each)
+    - Run all integration tests
+    - Run accessibility tests
+    - _Requirements: All requirements_
+
+## Notes
+
+- All implementation tasks (1-11) focus on building features without tests
+- Task 12 contains all testing work (infrastructure, unit tests, property-based tests, integration tests)
+- Each task references specific requirements for traceability
+- Property tests validate universal correctness properties using fast-check (100 iterations)
+- Unit tests validate specific examples and edge cases
+- All 16 correctness properties from the design document are covered by property-based tests
+- iOS testing requires manual verification on physical devices (iOS 15+)
+- Accessibility testing uses axe-core for automated checks and manual screen reader testing
