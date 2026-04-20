@@ -30,17 +30,29 @@ let index = 0;
   standalone: false,
 })
 export class RangeInputComponent extends InputControl<string, number> implements OnInit, OnDestroy {
+  /** ARIA label for the slider element */
   @Input() public ariaLabel?: string;
+  /** ID of element that labels the slider */
   @Input() public ariaLabelledby?: string;
+  /** ID of element that describes the slider */
   @Input() public ariaDescribedby?: string;
+  /** Debounce time in milliseconds for drag events (default: 200ms) */
   @Input() public dragDebounce? = 200;
+  /** Debounce time in milliseconds for drop events (default: 700ms) */
   @Input() public dropDebounce? = 700;
+  /** Unique identifier for the slider element */
   @Input() public id = `range_input-${index++}`;
+  /** Maximum value of the slider */
   @Input() public max: number;
+  /** Minimum value of the slider */
   @Input() public min: number;
+  /** Name attribute for the input element */
   @Input() public name?: string;
+  /** Text prefix to display before the value */
   @Input() public prefix?: string;
+  /** Step increment for slider values (use 'any' for continuous values) */
   @Input() public step: number | 'any' = 1;
+  /** Text suffix to display after the value */
   @Input() public suffix?: string;
 
   // TODO: Decimal places instead of bounded format (per Tim)
@@ -86,21 +98,42 @@ export class RangeInputComponent extends InputControl<string, number> implements
     return this._options;
   }
 
+  /** Emitted when the user finishes dragging the slider (after debounce delay) */
   @Output() public rangeDrop = new EventEmitter<number>();
+  /** Emitted while the user is dragging the slider (after debounce delay) */
   @Output() public rangeDrag = new EventEmitter<number>();
 
-  // NEW: Range mode outputs (Requirement 1)
+  /**
+   * Emitted when the minimum value changes in dual-handle mode
+   * @remarks Only emitted when enableRangeMode is true
+   */
   @Output() public minValueChange = new EventEmitter<number>();
+  /**
+   * Emitted when the maximum value changes in dual-handle mode
+   * @remarks Only emitted when enableRangeMode is true
+   */
   @Output() public maxValueChange = new EventEmitter<number>();
+  /**
+   * Emitted when either min or max value changes in dual-handle mode
+   * @remarks Only emitted when enableRangeMode is true
+   */
   @Output() public rangeChange = new EventEmitter<{ min: number; max: number }>();
 
+  /** Current formatted display value */
   public displayValue: string;
+  /** Tick mark data for rendering tick marks along the slider */
   public tickData: RangeInputTickData[];
 
-  // NEW: Internal state for range slider mode (public for template access)
+  /**
+   * Internal state for range slider (dual-handle) mode
+   * @remarks Only initialized when enableRangeMode is true
+   */
   public rangeSliderState?: RangeSliderState;
 
-  // NEW: Tooltip state (Requirements 4.1, 4.5)
+  /**
+   * Internal state for tooltip display and positioning
+   * @remarks Tracks visibility, content, and position for all tooltip instances
+   */
   public tooltipState: TooltipState = {
     singleVisible: false,
     singleContent: '',
@@ -116,27 +149,55 @@ export class RangeInputComponent extends InputControl<string, number> implements
   // NEW: Animation state (Requirements 3.5, 3.6)
   private animationInProgress = false;
 
+  /** Reference to the main slider input element */
   @ViewChild('input') private inputElementRef: ElementRef<HTMLInputElement>;
+  /** Reference to the display value element */
   @ViewChild('inputDisplayValue')
   private inputDisplayValueElementRef: ElementRef<HTMLSpanElement>;
 
-  // NEW: ViewChild references for dual-handle mode (Requirement 1)
+  /**
+   * Reference to the minimum handle input element (dual-handle mode only)
+   * @remarks Only available when enableRangeMode is true
+   */
   @ViewChild('minInput') private minInputElementRef?: ElementRef<HTMLInputElement>;
+  /**
+   * Reference to the maximum handle input element (dual-handle mode only)
+   * @remarks Only available when enableRangeMode is true
+   */
   @ViewChild('maxInput') private maxInputElementRef?: ElementRef<HTMLInputElement>;
 
-  // NEW: ViewChild references for tooltips (Requirement 4)
+  /**
+   * Reference to the single-handle tooltip element
+   * @remarks Only available when showTooltip is not 'never'
+   */
   @ViewChild('tooltip') private tooltipElementRef?: ElementRef<HTMLDivElement>;
+  /**
+   * Reference to the minimum handle tooltip element (dual-handle mode only)
+   * @remarks Only available when enableRangeMode is true and showTooltip is not 'never'
+   */
   @ViewChild('minTooltip') private minTooltipElementRef?: ElementRef<HTMLDivElement>;
+  /**
+   * Reference to the maximum handle tooltip element (dual-handle mode only)
+   * @remarks Only available when enableRangeMode is true and showTooltip is not 'never'
+   */
   @ViewChild('maxTooltip') private maxTooltipElementRef?: ElementRef<HTMLDivElement>;
 
+  /** Configuration options for the slider */
   private _options: RangeInputOptions = {};
+  /** Flag indicating if the current event is a change event */
   private isChangeEvent = false;
+  /** Flag indicating if the current event is an input event */
   private isInputEvent = false;
 
+  /** Subject for component destruction lifecycle */
   private readonly componentDestroyed$ = new Subject<boolean>();
+  /** Subject for debounced drag and drop event emissions */
   private readonly updateOnDragOrDrop$ = new Subject<number>();
 
-  // NEW: RxJS subjects for tooltip hide delay (Requirement 4.4, 4.5)
+  /**
+   * Subject for tooltip hide delay handling
+   * @remarks Emits which tooltip should be hidden after the configured delay
+   */
   private readonly tooltipHide$ = new Subject<'single' | 'min' | 'max'>();
 
   public constructor(
@@ -169,7 +230,116 @@ export class RangeInputComponent extends InputControl<string, number> implements
     this.updateOnDragOrDrop$.next(value);
   };
 
+  /**
+   * Validate configuration options and log warnings for invalid combinations (Requirement 8.5)
+   * @remarks Called during component initialization to catch configuration errors early
+   */
+  private validateConfiguration(): void {
+    // Validate range mode configuration
+    if (this._options.enableRangeMode) {
+      if (this._options.minValue != null && this._options.maxValue != null) {
+        if (this._options.minValue > this._options.maxValue) {
+          console.warn(
+            `[RangeInputComponent] Invalid range configuration: minValue (${this._options.minValue}) exceeds maxValue (${this._options.maxValue}). Values will be swapped automatically.`,
+          );
+          // Swap values automatically
+          const temp = this._options.minValue;
+          this._options.minValue = this._options.maxValue;
+          this._options.maxValue = temp;
+        }
+      }
+    }
+
+    // Validate step configuration
+    if (this.min != null && this.max != null && typeof this.step === 'number') {
+      const range = this.max - this.min;
+      if (this.step > range) {
+        const adjustedStep = range / 10;
+        console.warn(
+          `[RangeInputComponent] Invalid step configuration: step (${this.step}) is larger than range (${range}). Step will be adjusted to ${adjustedStep}.`,
+        );
+        this.step = adjustedStep;
+      }
+      if (this.step <= 0) {
+        console.warn(
+          `[RangeInputComponent] Invalid step configuration: step (${this.step}) must be positive. Step will be set to 1.`,
+        );
+        this.step = 1;
+      }
+    }
+
+    // Validate animation duration
+    if (this._options.animationDuration != null) {
+      if (this._options.animationDuration < 0) {
+        console.warn(
+          `[RangeInputComponent] Invalid animation duration: ${this._options.animationDuration}ms is negative. Duration will be clamped to 0ms.`,
+        );
+        this._options.animationDuration = 0;
+      } else if (this._options.animationDuration > 5000) {
+        console.warn(
+          `[RangeInputComponent] Invalid animation duration: ${this._options.animationDuration}ms exceeds maximum (5000ms). Duration will be clamped to 5000ms.`,
+        );
+        this._options.animationDuration = 5000;
+      }
+    }
+
+    // Validate tooltip placement
+    if (this._options.tooltipPlacement != null) {
+      const validPlacements = ['top', 'bottom', 'left', 'right'];
+      if (!validPlacements.includes(this._options.tooltipPlacement)) {
+        console.warn(
+          `[RangeInputComponent] Invalid tooltip placement: '${this._options.tooltipPlacement}'. Valid values are: ${validPlacements.join(', ')}. Defaulting to 'top'.`,
+        );
+        this._options.tooltipPlacement = 'top';
+      }
+    }
+
+    // Validate tooltip delay
+    if (this._options.tooltipDelay != null && this._options.tooltipDelay < 0) {
+      console.warn(
+        `[RangeInputComponent] Invalid tooltip delay: ${this._options.tooltipDelay}ms is negative. Delay will be set to 0ms.`,
+      );
+      this._options.tooltipDelay = 0;
+    }
+
+    // Validate large step percentage
+    if (this._options.largeStepPercentage != null) {
+      if (this._options.largeStepPercentage <= 0 || this._options.largeStepPercentage > 100) {
+        console.warn(
+          `[RangeInputComponent] Invalid large step percentage: ${this._options.largeStepPercentage}%. Must be between 0 and 100. Defaulting to 10%.`,
+        );
+        this._options.largeStepPercentage = 10;
+      }
+    }
+
+    // Validate handle size
+    if (this._options.handleSize != null && this._options.handleSize <= 0) {
+      console.warn(
+        `[RangeInputComponent] Invalid handle size: ${this._options.handleSize}px must be positive. Handle size will be ignored.`,
+      );
+      this._options.handleSize = undefined;
+    }
+
+    // Validate track height
+    if (this._options.trackHeight != null && this._options.trackHeight <= 0) {
+      console.warn(
+        `[RangeInputComponent] Invalid track height: ${this._options.trackHeight}px must be positive. Track height will be ignored.`,
+      );
+      this._options.trackHeight = undefined;
+    }
+
+    // Warn about invalid option combinations
+    if (this._options.enableRangeMode && this._options.tooltipTemplate != null) {
+      console.warn(
+        '[RangeInputComponent] Custom tooltip templates in dual-handle mode may require additional styling for proper positioning.',
+      );
+    }
+  }
+
   public ngOnInit(): void {
+    // Validate configuration options (Requirement 8.5)
+    this.validateConfiguration();
+
     // Initialize range slider state if dual-handle mode is enabled
     if (this._options.enableRangeMode) {
       this.initializeRangeSliderState();
