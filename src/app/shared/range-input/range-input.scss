@@ -77,12 +77,30 @@ $tickValueColor: var(--range-input-tick-value-color, #343741);
     left: 0;
     pointer-events: none; // Disable pointer events on track, enable on thumb
 
-    // Enable pointer events only on the thumb
+    // Hide the native track in range mode - we use background gradient instead
+    &::-webkit-slider-runnable-track {
+      background: transparent;
+    }
+    &::-moz-range-track {
+      background: transparent;
+    }
+
+    // Style the native thumbs normally - they are the actual interactive elements
     &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      @include c-range-input__slider-thumb();
+      width: $handleSizeCustom;
+      height: $handleSizeCustom;
       pointer-events: auto;
+      cursor: pointer;
     }
     &::-moz-range-thumb {
+      @include c-range-input__slider-thumb();
+      width: $handleSizeFirefox;
+      height: $handleSizeFirefox;
       pointer-events: auto;
+      cursor: pointer;
     }
 
     // Min handle should be below max handle when overlapping
@@ -91,8 +109,10 @@ $tickValueColor: var(--range-input-tick-value-color, #343741);
     }
 
     // Max handle should be above min handle when overlapping
+    // Make the max input background transparent by default (will be set via JS if needed)
     &--max {
       z-index: 4;
+      background: transparent !important;
     }
 
     // When handles are at the same position, ensure both are clickable
@@ -104,7 +124,7 @@ $tickValueColor: var(--range-input-tick-value-color, #343741);
 
     &--max:focus,
     &--max:active {
-      z-index: 5;
+      z-index: 6; // Higher than min when active
     }
   }
 

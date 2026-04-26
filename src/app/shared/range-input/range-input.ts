@@ -179,6 +179,17 @@ export class RangeInputComponent extends InputControl<string, number> implements
   @ViewChild('maxInput') private maxInputElementRef?: ElementRef<HTMLInputElement>;
 
   /**
+   * Reference to the minimum visual thumb element (dual-handle mode only)
+   * @remarks Only available when enableRangeMode is true
+   */
+  @ViewChild('minVisualThumb') private minVisualThumbElementRef?: ElementRef<HTMLDivElement>;
+  /**
+   * Reference to the maximum visual thumb element (dual-handle mode only)
+   * @remarks Only available when enableRangeMode is true
+   */
+  @ViewChild('maxVisualThumb') private maxVisualThumbElementRef?: ElementRef<HTMLDivElement>;
+
+  /**
    * Reference to the single-handle tooltip element
    * @remarks Only available when showTooltip is not 'never'
    */
@@ -467,6 +478,22 @@ export class RangeInputComponent extends InputControl<string, number> implements
     }
     // Otherwise use the same formatter as display value (Requirement 6.2)
     return this.getDisplayValue(value);
+  }
+
+  /**
+   * Calculate visual thumb position as percentage for range mode
+   * @param handle - Which handle to calculate position for ('min' or 'max')
+   * @returns Position as percentage string (e.g., "25%")
+   */
+  public getVisualThumbPosition(handle: 'min' | 'max'): string {
+    if (!this.rangeSliderState) {
+      return '0%';
+    }
+
+    const value = handle === 'min' ? this.rangeSliderState.minValue : this.rangeSliderState.maxValue;
+    const percentage = ((value - this.min) / (this.max - this.min)) * 100;
+
+    return `${percentage}%`;
   }
 
   /**
@@ -1000,6 +1027,12 @@ export class RangeInputComponent extends InputControl<string, number> implements
       this.renderer.setStyle(this.inputDisplayValueElementRef.nativeElement, 'left', `${midProgress}%`);
     }
 
+    // In range mode, always make the max input transparent to avoid double tracks
+    // The min input will show the track/gradient
+    if (this.maxInputElementRef?.nativeElement) {
+      this.renderer.setStyle(this.maxInputElementRef.nativeElement, 'background', 'transparent');
+    }
+
     // Update progress bar to show selected range (Requirement 1.7)
     if (this.options.showProgressBar) {
       // Apply gradient showing the selected range between min and max handles
@@ -1011,12 +1044,9 @@ export class RangeInputComponent extends InputControl<string, number> implements
         #C2C2CD ${maxProgress}%, 
         #C2C2CD 100%)`;
 
-      // Apply to both input elements
+      // Apply to only the min input element (bottom layer)
       if (this.minInputElementRef?.nativeElement) {
         this.renderer.setStyle(this.minInputElementRef.nativeElement, 'background', gradient);
-      }
-      if (this.maxInputElementRef?.nativeElement) {
-        this.renderer.setStyle(this.maxInputElementRef.nativeElement, 'background', gradient);
       }
     }
 
