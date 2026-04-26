@@ -8,9 +8,10 @@ import { ScenarioSliderComponent } from './scenario-slider/scenario-slider';
 import { RangeInputNumberFormatConverter } from './shared/range-input/range-input-number-format-converter';
 import { NumberFormatValueConverter } from './shared/service/number-converter';
 import { SharedModule } from './shared/shared.module';
+import { TestPageComponent } from './test-page/test-page.component';
 
 @NgModule({
-  declarations: [AppComponent, ScenarioSliderComponent],
+  declarations: [AppComponent, ScenarioSliderComponent, TestPageComponent],
   imports: [BrowserModule, SharedModule, FormsModule, FontAwesomeModule, AppRoutingModule],
   providers: [
     {

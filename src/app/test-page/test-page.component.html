@@ -1,0 +1,359 @@
+<div class="test-page">
+  <header class="test-header">
+    <h1>RangeInput Manual Testing Page</h1>
+    <p class="subtitle">iOS Device Testing & Screen Reader Testing</p>
+  </header>
+
+  <nav class="test-nav">
+    <h2>Quick Navigation</h2>
+    <ul>
+      <li><a href="#basic">Basic Slider</a></li>
+      <li><a href="#steps">Step Values</a></li>
+      <li><a href="#range">Range Sliders</a></li>
+      <li><a href="#formatting">Formatting</a></li>
+      <li><a href="#features">Advanced Features</a></li>
+      <li><a href="#scrollable">Scrollable Container</a></li>
+      <li><a href="#accessibility">Accessibility</a></li>
+    </ul>
+  </nav>
+
+  <!-- Test Case 1: Basic Slider -->
+  <section id="basic" class="test-section">
+    <h2>Test Case 1: Basic Single-Handle Slider</h2>
+    <p class="test-description">
+      <strong>Purpose:</strong> Test basic touch interaction and drag gestures.<br />
+      <strong>iOS Test:</strong> Tap thumb and drag. Verify smooth tracking.<br />
+      <strong>Screen Reader:</strong> Tab to slider, verify announcement includes value and range.
+    </p>
+    <div class="test-case">
+      <label for="basic-slider">Basic Slider (0-100)</label>
+      <mg-range-input
+        id="basic-slider"
+        [(ngModel)]="basicValue"
+        [options]="basicOptions"
+        [min]="0"
+        [max]="100"
+        [step]="1"
+        aria-label="Basic slider from 0 to 100"></mg-range-input>
+      <p class="current-value">Current Value: {{ basicValue }}</p>
+    </div>
+  </section>
+
+  <!-- Test Case 2-4: Step Values -->
+  <section id="steps" class="test-section">
+    <h2>Test Cases 2-4: Step Attribute Behavior</h2>
+    <p class="test-description">
+      <strong>Purpose:</strong> Test slider behavior with different step values.<br />
+      <strong>iOS Test:</strong> Verify drag from thumb works. Note if track-tap works.<br />
+      <strong>Screen Reader:</strong> Use arrow keys to adjust, verify step increments are announced.
+    </p>
+
+    <!-- Step = 1 -->
+    <div class="test-case">
+      <label for="step-1-slider">Slider with step="1" (Integer Steps)</label>
+      <mg-range-input
+        id="step-1-slider"
+        [(ngModel)]="integerStepValue"
+        [options]="integerStepOptions"
+        [min]="0"
+        [max]="10"
+        [step]="1"
+        aria-label="Slider with integer steps from 0 to 10"></mg-range-input>
+      <p class="current-value">Current Value: {{ integerStepValue }}</p>
+    </div>
+
+    <!-- Step = 0.1 -->
+    <div class="test-case">
+      <label for="step-decimal-slider">Slider with step="0.1" (Decimal Steps)</label>
+      <mg-range-input
+        id="step-decimal-slider"
+        [(ngModel)]="decimalStepValue"
+        [options]="decimalStepOptions"
+        [min]="0"
+        [max]="10"
+        [step]="0.1"
+        aria-label="Slider with decimal steps from 0 to 10"></mg-range-input>
+      <p class="current-value">Current Value: {{ decimalStepValue }}</p>
+    </div>
+
+    <!-- Step = 10 -->
+    <div class="test-case">
+      <label for="step-10-slider">Slider with step="10" (Large Steps)</label>
+      <mg-range-input
+        id="step-10-slider"
+        [(ngModel)]="largeStepValue"
+        [options]="largeStepOptions"
+        [min]="0"
+        [max]="100"
+        [step]="10"
+        aria-label="Slider with large steps from 0 to 100"></mg-range-input>
+      <p class="current-value">Current Value: {{ largeStepValue }}</p>
+    </div>
+  </section>
+
+  <!-- Test Case 5: Range Slider -->
+  <section id="range" class="test-section">
+    <h2>Test Case 5: Range Slider (Dual-Handle)</h2>
+    <p class="test-description">
+      <strong>Purpose:</strong> Test dual-handle mode with min/max constraints.<br />
+      <strong>iOS Test:</strong> Drag both handles independently. Try to make them overlap.<br />
+      <strong>Screen Reader:</strong> Tab between handles, verify each has distinct label and value.
+    </p>
+    <div class="test-case">
+      <label for="range-slider-min">Range Slider (0-100)</label>
+      <mg-range-input
+        id="range-slider"
+        [(minValue)]="rangeMinValue"
+        [(maxValue)]="rangeMaxValue"
+        [options]="rangeOptions"
+        [min]="0"
+        [max]="100"
+        [step]="1"></mg-range-input>
+      <p class="current-value">Range: {{ rangeMinValue }} - {{ rangeMaxValue }}</p>
+    </div>
+  </section>
+
+  <!-- Test Case 6-7: Formatting -->
+  <section id="formatting" class="test-section">
+    <h2>Test Cases 6-7: Custom Formatting</h2>
+    <p class="test-description">
+      <strong>Purpose:</strong> Test custom value formatting with screen readers.<br />
+      <strong>Screen Reader:</strong> Verify formatted values are announced correctly (e.g., "50 percent", "1000
+      dollars").
+    </p>
+
+    <!-- Percentage -->
+    <div class="test-case">
+      <label for="percentage-slider">Percentage Slider (0-100%)</label>
+      <mg-range-input
+        id="percentage-slider"
+        [(ngModel)]="percentageValue"
+        [options]="percentageOptions"
+        [min]="0"
+        [max]="100"
+        [step]="1"
+        aria-label="Percentage slider from 0 to 100 percent"></mg-range-input>
+      <p class="current-value">Current Value: {{ percentageValue }}%</p>
+    </div>
+
+    <!-- Currency -->
+    <div class="test-case">
+      <label for="currency-slider">Currency Slider ($0-$10,000)</label>
+      <mg-range-input
+        id="currency-slider"
+        [(ngModel)]="currencyValue"
+        [options]="currencyOptions"
+        [min]="0"
+        [max]="10000"
+        [step]="100"
+        aria-label="Currency slider from 0 to 10000 dollars"></mg-range-input>
+      <p class="current-value">Current Value: ${{ currencyValue.toLocaleString() }}</p>
+    </div>
+  </section>
+
+  <!-- Test Case 8-10: Advanced Features -->
+  <section id="features" class="test-section">
+    <h2>Test Cases 8-10: Advanced Features</h2>
+
+    <!-- Tick Marks -->
+    <div class="test-case">
+      <h3>Tick Marks</h3>
+      <p class="test-description">
+        <strong>Screen Reader:</strong> Verify tick values are accessible and don't interfere with slider operation.
+      </p>
+      <label for="tick-slider">Slider with Tick Marks</label>
+      <mg-range-input
+        id="tick-slider"
+        [(ngModel)]="tickValue"
+        [options]="tickOptions"
+        [min]="0"
+        [max]="100"
+        [step]="1"
+        aria-label="Slider with tick marks from 0 to 100"></mg-range-input>
+      <p class="current-value">Current Value: {{ tickValue }}</p>
+    </div>
+
+    <!-- Animations -->
+    <div class="test-case">
+      <h3>Animations</h3>
+      <p class="test-description">
+        <strong>iOS Test:</strong> Click buttons to trigger programmatic changes. Verify smooth animation.<br />
+        <strong>Note:</strong> Drag should NOT animate (immediate response).
+      </p>
+      <label for="animated-slider">Slider with Animations</label>
+      <mg-range-input
+        id="animated-slider"
+        [(ngModel)]="animatedValue"
+        [options]="animatedOptions"
+        [min]="0"
+        [max]="100"
+        [step]="1"
+        aria-label="Animated slider from 0 to 100"></mg-range-input>
+      <p class="current-value">Current Value: {{ animatedValue }}</p>
+      <div class="button-group">
+        <button (click)="setAnimatedValueToMin()">Set to 0</button>
+        <button (click)="setAnimatedValueToMiddle()">Set to 50</button>
+        <button (click)="setAnimatedValueToMax()">Set to 100</button>
+        <button (click)="randomizeAnimatedValue()">Random</button>
+      </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="test-case">
+      <h3>Tooltip</h3>
+      <p class="test-description">
+        <strong>iOS Test:</strong> Hover/tap on slider. Verify tooltip appears and follows handle.
+      </p>
+      <label for="tooltip-slider">Slider with Tooltip (Hover to See)</label>
+      <mg-range-input
+        id="tooltip-slider"
+        [(ngModel)]="tooltipValue"
+        [options]="tooltipOptions"
+        [min]="0"
+        [max]="100"
+        [step]="1"
+        aria-label="Slider with tooltip from 0 to 100"></mg-range-input>
+      <p class="current-value">Current Value: {{ tooltipValue }}</p>
+    </div>
+  </section>
+
+  <!-- Test Case 11: Keyboard Navigation -->
+  <section id="keyboard" class="test-section">
+    <h2>Test Case 11: Keyboard Navigation</h2>
+    <p class="test-description">
+      <strong>Screen Reader:</strong> Test all keyboard shortcuts:<br />
+      - Arrow keys: Increase/decrease by step<br />
+      - Page Up/Down: Large steps (10% of range)<br />
+      - Home/End: Jump to min/max<br />
+      Verify all keys work and values are announced.
+    </p>
+    <div class="test-case">
+      <label for="keyboard-slider">Keyboard Navigation Slider</label>
+      <mg-range-input
+        id="keyboard-slider"
+        [(ngModel)]="keyboardValue"
+        [options]="keyboardOptions"
+        [min]="0"
+        [max]="100"
+        [step]="1"
+        aria-label="Keyboard navigation slider from 0 to 100"></mg-range-input>
+      <p class="current-value">Current Value: {{ keyboardValue }}</p>
+      <div class="keyboard-instructions">
+        <h4>Keyboard Shortcuts:</h4>
+        <ul>
+          <li><kbd>←</kbd> <kbd>↓</kbd> Decrease by 1</li>
+          <li><kbd>→</kbd> <kbd>↑</kbd> Increase by 1</li>
+          <li><kbd>Page Down</kbd> Decrease by 10</li>
+          <li><kbd>Page Up</kbd> Increase by 10</li>
+          <li><kbd>Home</kbd> Jump to 0</li>
+          <li><kbd>End</kbd> Jump to 100</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Test Case 12: Scrollable Container -->
+  <section id="scrollable" class="test-section">
+    <h2>Test Case 12: Slider in Scrollable Container</h2>
+    <p class="test-description">
+      <strong>iOS Test:</strong> Try to scroll by dragging near slider. Then drag slider thumb.<br />
+      <strong>Expected:</strong> Scrolling works outside slider. Slider drag does NOT scroll.
+    </p>
+    <div class="scrollable-container">
+      <div class="scrollable-content">
+        <p>Scroll down to find the slider...</p>
+        <div style="height: 200px"></div>
+        <div class="test-case">
+          <label for="scrollable-slider">Slider in Scrollable Container</label>
+          <mg-range-input
+            id="scrollable-slider"
+            [(ngModel)]="basicValue"
+            [options]="basicOptions"
+            [min]="0"
+            [max]="100"
+            [step]="1"
+            aria-label="Slider in scrollable container from 0 to 100"></mg-range-input>
+          <p class="current-value">Current Value: {{ basicValue }}</p>
+        </div>
+        <div style="height: 200px"></div>
+        <p>...keep scrolling</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Test Case 13: Accessibility Features -->
+  <section id="accessibility" class="test-section">
+    <h2>Test Case 13: Accessibility Features</h2>
+    <p class="test-description">
+      <strong>Screen Reader:</strong> Test range slider with distinct labels for each handle.<br />
+      Verify keyboard navigation only affects focused handle.
+    </p>
+    <div class="test-case">
+      <label for="accessible-range-slider">Accessible Range Slider</label>
+      <mg-range-input
+        id="accessible-range-slider"
+        [(minValue)]="accessibleRangeMin"
+        [(maxValue)]="accessibleRangeMax"
+        [options]="accessibleRangeOptions"
+        [min]="0"
+        [max]="100"
+        [step]="1"></mg-range-input>
+      <p class="current-value">Range: {{ accessibleRangeMin }} - {{ accessibleRangeMax }}</p>
+    </div>
+
+    <!-- Disabled Slider -->
+    <div class="test-case">
+      <h3>Disabled Slider</h3>
+      <p class="test-description">
+        <strong>Screen Reader:</strong> Verify slider is announced as disabled and cannot be adjusted.
+      </p>
+      <label for="disabled-slider">Disabled Slider</label>
+      <mg-range-input
+        id="disabled-slider"
+        [(ngModel)]="disabledValue"
+        [options]="disabledOptions"
+        [min]="0"
+        [max]="100"
+        [step]="1"
+        [disabled]="true"
+        aria-label="Disabled slider from 0 to 100"></mg-range-input>
+      <p class="current-value">Current Value: {{ disabledValue }}</p>
+    </div>
+  </section>
+
+  <!-- Testing Instructions -->
+  <section class="test-section instructions">
+    <h2>Testing Instructions</h2>
+    <div class="instruction-grid">
+      <div class="instruction-card">
+        <h3>iOS Testing</h3>
+        <ol>
+          <li>Open this page in Safari on iOS 15+</li>
+          <li>Test each slider by tapping and dragging</li>
+          <li>Note any issues with touch responsiveness</li>
+          <li>Test in scrollable container (Test Case 12)</li>
+          <li>Try different step values (Test Cases 2-4)</li>
+          <li>Test range slider with both handles (Test Case 5)</li>
+        </ol>
+      </div>
+      <div class="instruction-card">
+        <h3>Screen Reader Testing</h3>
+        <ol>
+          <li>Enable your screen reader (VoiceOver, NVDA, JAWS)</li>
+          <li>Tab through each slider</li>
+          <li>Listen to announcements (value, range, label)</li>
+          <li>Test keyboard navigation (arrows, Page Up/Down, Home/End)</li>
+          <li>Verify formatted values are announced correctly</li>
+          <li>Test range slider with distinct handle labels</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <footer class="test-footer">
+    <p>
+      For detailed testing procedures, see
+      <code>.kiro/specs/ngx-slider-feature-parity/MANUAL_TESTING_GUIDE.md</code>
+    </p>
+  </footer>
+</div>

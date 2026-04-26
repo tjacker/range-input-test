@@ -259,7 +259,7 @@ This implementation extends the existing RangeInputComponent to achieve feature 
     - Demonstrate new features in existing demo component
     - _Requirements: All requirements_
 
-- [ ] 11. Manual iOS testing
+- [x] 11. Manual iOS testing
   - [ ] 11.1 Test on iOS 15+ physical devices
     - Test in scrollable containers
     - Test with various step values
