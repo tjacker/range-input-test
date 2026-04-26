@@ -33,12 +33,23 @@ export class ScenarioSliderComponent implements OnInit {
   public maximum = 50.95;
   public value = 0;
   public secondaryMarkerOptions: SecondaryMarkerOptions | null;
+
+  // Demo mode toggle
+  public demoMode: 'single' | 'range' = 'single';
+
+  // Range mode values
+  public minValue = 10;
+  public maxValue = 40;
+
   public options = {
     hideDisplayValue: false,
     showProgressBar: true,
     showTicks: true,
     showTooltip: 'onHover' as const,
     tooltipPlacement: 'top' as const,
+    enableAnimations: true,
+    enableKeyboardNavigation: true,
+    largeStepPercentage: 10,
   };
   public faLocationPin = faLocationPin;
   public status = 'Initial';
@@ -58,6 +69,35 @@ export class ScenarioSliderComponent implements OnInit {
     setTimeout(() => {
       this.status = 'Dropped';
     }, 0);
+  }
+
+  public onRangeChange(range: { min: number; max: number }): void {
+    this.minValue = range.min;
+    this.maxValue = range.max;
+    this.status = `Range: ${Math.round(range.min)}% - ${Math.round(range.max)}%`;
+  }
+
+  public toggleDemoMode(): void {
+    this.demoMode = this.demoMode === 'single' ? 'range' : 'single';
+    this.status = `Switched to ${this.demoMode} mode`;
+  }
+
+  public get currentOptions() {
+    if (this.demoMode === 'range') {
+      return {
+        ...this.options,
+        ...this.getSliderOptions(this.fearProperty),
+        enableRangeMode: true,
+        minValue: this.minValue,
+        maxValue: this.maxValue,
+        minHandleAriaLabel: 'Minimum loss percentage',
+        maxHandleAriaLabel: 'Maximum loss percentage',
+      };
+    }
+    return {
+      ...this.options,
+      ...this.getSliderOptions(this.fearProperty),
+    };
   }
 
   private getSliderOptions(fearProperty: string) {
