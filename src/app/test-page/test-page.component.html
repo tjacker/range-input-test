@@ -103,13 +103,13 @@
       <label for="range-slider-min">Range Slider (0-100)</label>
       <mg-range-input
         id="range-slider"
-        [(minValue)]="rangeMinValue"
-        [(maxValue)]="rangeMaxValue"
+        [(ngModel)]="rangeValue"
         [options]="rangeOptions"
         [min]="0"
         [max]="100"
-        [step]="1"></mg-range-input>
-      <p class="current-value">Range: {{ rangeMinValue }} - {{ rangeMaxValue }}</p>
+        [step]="1"
+        (rangeChange)="onRangeChange($event)"></mg-range-input>
+      <p class="current-value">Range: {{ rangeOptions.minValue }} - {{ rangeOptions.maxValue }}</p>
     </div>
   </section>
 
@@ -292,13 +292,13 @@
       <label for="accessible-range-slider">Accessible Range Slider</label>
       <mg-range-input
         id="accessible-range-slider"
-        [(minValue)]="accessibleRangeMin"
-        [(maxValue)]="accessibleRangeMax"
+        [(ngModel)]="accessibleRangeValue"
         [options]="accessibleRangeOptions"
         [min]="0"
         [max]="100"
-        [step]="1"></mg-range-input>
-      <p class="current-value">Range: {{ accessibleRangeMin }} - {{ accessibleRangeMax }}</p>
+        [step]="1"
+        (rangeChange)="onAccessibleRangeChange($event)"></mg-range-input>
+      <p class="current-value">Range: {{ accessibleRangeOptions.minValue }} - {{ accessibleRangeOptions.maxValue }}</p>
     </div>
 
     <!-- Disabled Slider -->

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RangeInputOptions } from '../shared/range-input/range-input-options';
+import { RangeInputOptions } from '../shared/range-input/range-input';
 
 @Component({
   selector: 'mg-test-page',
@@ -37,10 +37,11 @@ export class TestPageComponent {
   };
 
   // Test Case 5: Range slider (dual-handle)
-  public rangeMinValue = 25;
-  public rangeMaxValue = 75;
+  public rangeValue = 50; // Single value for backward compatibility
   public rangeOptions: RangeInputOptions = {
     enableRangeMode: true,
+    minValue: 25,
+    maxValue: 75,
     hideDisplayValue: false,
     showProgressBar: true,
   };
@@ -102,10 +103,11 @@ export class TestPageComponent {
   };
 
   // Test Case 12: Range slider with distinct labels
-  public accessibleRangeMin = 30;
-  public accessibleRangeMax = 70;
+  public accessibleRangeValue = 50; // Single value for backward compatibility
   public accessibleRangeOptions: RangeInputOptions = {
     enableRangeMode: true,
+    minValue: 30,
+    maxValue: 70,
     hideDisplayValue: false,
     showProgressBar: true,
     minHandleAriaLabel: 'Minimum value',
@@ -134,5 +136,16 @@ export class TestPageComponent {
 
   public randomizeAnimatedValue(): void {
     this.animatedValue = Math.floor(Math.random() * 101);
+  }
+
+  // Event handlers for range sliders
+  public onRangeChange(event: { min: number; max: number }): void {
+    this.rangeOptions.minValue = event.min;
+    this.rangeOptions.maxValue = event.max;
+  }
+
+  public onAccessibleRangeChange(event: { min: number; max: number }): void {
+    this.accessibleRangeOptions.minValue = event.min;
+    this.accessibleRangeOptions.maxValue = event.max;
   }
 }
