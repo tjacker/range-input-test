@@ -58,6 +58,7 @@
     [options]="currentOptions"
     [dropDebounce]="0"
     [dragDebounce]="0"
+    [ngModel]="value"
     (rangeChange)="onRangeChange($event)">
     @if (secondaryMarkerOptions) {
       <span class="c-range-input__marker" [style.left.%]="secondaryMarkerOptions.placement" [style.font-size.px]="24">

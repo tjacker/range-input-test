@@ -1,4 +1,5 @@
 import {
+  AfterViewInit,
   Component,
   ElementRef,
   EventEmitter,
@@ -29,7 +30,7 @@ let index = 0;
   ],
   standalone: false,
 })
-export class RangeInputComponent extends InputControl<string, number> implements OnInit, OnDestroy {
+export class RangeInputComponent extends InputControl<string, number> implements OnInit, AfterViewInit, OnDestroy {
   /** ARIA label for the slider element */
   @Input() public ariaLabel?: string;
   /** ID of element that labels the slider */
@@ -68,6 +69,8 @@ export class RangeInputComponent extends InputControl<string, number> implements
   public numberFormatConverterOptions: any;
 
   @Input() public set options(value: RangeInputOptions) {
+    const wasRangeModeEnabled = this._options.enableRangeMode;
+
     this._options = {
       ...{
         hideDisplayValue: true,
@@ -92,6 +95,15 @@ export class RangeInputComponent extends InputControl<string, number> implements
       ...this._options,
       ...value,
     };
+
+    // Initialize range slider state if range mode is newly enabled
+    if (this._options.enableRangeMode && !wasRangeModeEnabled) {
+      this.initializeRangeSliderState();
+    }
+    // Clear range slider state if range mode is disabled
+    else if (!this._options.enableRangeMode && wasRangeModeEnabled) {
+      this.rangeSliderState = undefined;
+    }
   }
 
   public get options(): RangeInputOptions {
@@ -416,6 +428,24 @@ export class RangeInputComponent extends InputControl<string, number> implements
 
   public ngOnDestroy(): void {
     this.componentDestroyed$.next(true);
+  }
+
+  public ngAfterViewInit(): void {
+    // Initialize range slider state if it wasn't initialized yet
+    // This handles the case where options are set before min/max inputs
+    if (this._options.enableRangeMode && !this.rangeSliderState) {
+      this.initializeRangeSliderState();
+
+      // Update the display if state was just initialized
+      // Use setTimeout to ensure this runs after Angular's change detection
+      if (this.rangeSliderState) {
+        setTimeout(() => {
+          if (this.rangeSliderState) {
+            this.updateRangeProgressDisplay();
+          }
+        }, 0);
+      }
+    }
   }
 
   public getDisplayValue(value: number): string {
@@ -748,9 +778,13 @@ export class RangeInputComponent extends InputControl<string, number> implements
     const sliderProgress: number = ((value - this.min) / (this.max - this.min)) * 100;
 
     this.displayValue = this.getDisplayValue(value);
-    this.renderer.setStyle(this.inputDisplayValueElementRef.nativeElement, 'left', `${sliderProgress}%`);
 
-    if (this.options.showProgressBar) {
+    // Guard: Only update DOM if element refs are available
+    if (this.inputDisplayValueElementRef?.nativeElement) {
+      this.renderer.setStyle(this.inputDisplayValueElementRef.nativeElement, 'left', `${sliderProgress}%`);
+    }
+
+    if (this.options.showProgressBar && this.inputElementRef?.nativeElement) {
       this.renderer.setStyle(
         this.inputElementRef.nativeElement,
         'background',
@@ -789,6 +823,11 @@ export class RangeInputComponent extends InputControl<string, number> implements
    * Initialize range slider state for dual-handle mode
    */
   private initializeRangeSliderState(): void {
+    // Guard: Don't initialize if min/max are not set yet
+    if (this.min == null || this.max == null) {
+      return;
+    }
+
     this.rangeSliderState = {
       minValue: this._options.minValue ?? this.min,
       maxValue: this._options.maxValue ?? this.max,
